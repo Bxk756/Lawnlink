@@ -1,0 +1,20 @@
+{
+  "name": "lawnlink",
+  "version": "1.0.0",
+  "description": "LawnLink Landscaping Marketplace Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["lawnlink", "landscaping", "marketplace", "stripe"],
+  "author": "Brian Kelley",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "stripe": "^20.4.1"
+  }
+}
