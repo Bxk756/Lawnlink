@@ -7,6 +7,8 @@
 
 <title>LawnLink</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 
 body{
@@ -206,7 +208,7 @@ Request, track, and pay all in one app.
 Request a Service
 </button>
 
-<button class="btn-secondary">
+<button class="btn-secondary" onclick="window.location.href='/signup.html'">
 Become a Pro
 </button>
 
@@ -299,6 +301,26 @@ Made by Swarm Shield LLC.
 
 
 <script>
+
+const SUPABASE_URL="https://zapztkpavvtslvmjzxbh.supabase.co"
+
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+
+const { createClient } = supabase
+
+const client = createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
+
+async function checkUser(){
+
+const { data:{ session } } = await client.auth.getSession()
+
+if(session){
+console.log("User logged in")
+}
+
+}
+
+checkUser()
 
 function scrollToServices(){
 document.getElementById("services").scrollIntoView({
