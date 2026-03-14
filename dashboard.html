@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LawnLink Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:system-ui;
+background:#f4f6f8;
+margin:0;
+}
+
+header{
+background:#1a9b6b;
+color:white;
+padding:20px;
+display:flex;
+justify-content:space-between;
+}
+
+.container{
+padding:40px;
+max-width:800px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:12px;
+margin-top:10px;
+}
+
+button{
+margin-top:10px;
+padding:10px;
+background:#1a9b6b;
+color:white;
+border:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h2>LawnLink Dashboard</h2>
+
+<button onclick="logout()">Logout</button>
+
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Create Job</h3>
+
+<input id="title" placeholder="Job Title">
+
+<input id="price" placeholder="Price">
+
+<button onclick="createJob()">Post Job</button>
+
+</div>
+
+<div class="card">
+
+<h3>Jobs</h3>
+
+<div id="jobs"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL="https://zapztkpavvtslvmjzxbh.supabase.co"
+
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+const { createClient } = supabase
+
+const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+async function checkUser(){
+
+const { data:{ session } } = await client.auth.getSession()
+
+if(!session){
+window.location.href="/login.html"
+}
+
+}
+
+checkUser()
+
+async function createJob(){
+
+const title=document.getElementById("title").value
+const price=document.getElementById("price").value
+
+const { data:{ user } } = await client.auth.getUser()
+
+await client.from("jobs").insert([
+{
+title:title,
+price:price,
+user_id:user.id
+}
+])
+
+loadJobs()
+
+}
+
+async function loadJobs(){
+
+const { data } = await client
+.from("jobs")
+.select("*")
+.order("created_at",{ascending:false})
+
+const container=document.getElementById("jobs")
+
+container.innerHTML=""
+
+data.forEach(job=>{
+
+const div=document.createElement("div")
+
+div.innerHTML=`<b>${job.title}</b> - $${job.price}`
+
+container.appendChild(div)
+
+})
+
+}
+
+async function logout(){
+
+await client.auth.signOut()
+
+window.location.href="/login.html"
+
+}
+
+loadJobs()
+
+</script>
+
+</body>
+</html>
