@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LawnLink Signup</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family: system-ui;
+background:#f4f6f8;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.card{
+background:white;
+padding:40px;
+border-radius:16px;
+width:360px;
+box-shadow:0 10px 30px rgba(0,0,0,.1);
+text-align:center;
+}
+
+.logo{
+width:60px;
+height:60px;
+background:#1a9b6b;
+border-radius:16px;
+margin:auto;
+display:flex;
+align-items:center;
+justify-content:center;
+color:white;
+font-size:26px;
+}
+
+h1{
+margin-top:16px;
+margin-bottom:5px;
+}
+
+.subtitle{
+color:#777;
+margin-bottom:30px;
+}
+
+.role-select{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.role-btn{
+flex:1;
+padding:12px;
+border-radius:10px;
+border:2px solid #ddd;
+cursor:pointer;
+}
+
+.role-btn.active{
+border-color:#1a9b6b;
+background:#e9f8f3;
+}
+
+input{
+width:100%;
+padding:14px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ddd;
+}
+
+button{
+width:100%;
+padding:14px;
+margin-top:20px;
+border:none;
+background:#1a9b6b;
+color:white;
+border-radius:10px;
+font-size:16px;
+cursor:pointer;
+}
+
+.footer{
+margin-top:20px;
+font-size:14px;
+color:#666;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="logo">🌿</div>
+
+<h1>LawnLink</h1>
+<div class="subtitle">Join our landscaping community</div>
+
+<h2>Create Account</h2>
+
+<div class="role-select">
+
+<div id="homeownerBtn" class="role-btn active">
+🏠 Homeowner
+</div>
+
+<div id="proBtn" class="role-btn">
+🛠 Landscaper
+</div>
+
+</div>
+
+<input id="email" type="email" placeholder="Enter your email">
+
+<input id="password" type="password" placeholder="Create a password">
+
+<button onclick="signup()">Join LawnLink</button>
+
+<div class="footer">
+Already have an account?
+<a href="login.html">Sign in</a>
+</div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL = "https://zapztkpavvtslvmjzxbh.supabase.co"
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+
+const supabase = window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_ANON
+)
+
+let role = "homeowner"
+
+document.getElementById("homeownerBtn").onclick = () =>{
+role="homeowner"
+homeownerBtn.classList.add("active")
+proBtn.classList.remove("active")
+}
+
+document.getElementById("proBtn").onclick = () =>{
+role="pro"
+proBtn.classList.add("active")
+homeownerBtn.classList.remove("active")
+}
+
+async function signup(){
+
+const email = document.getElementById("email").value
+const password = document.getElementById("password").value
+
+const {data,error} = await supabase.auth.signUp({
+
+email:email,
+password:password,
+
+options:{
+data:{
+role:role
+}
+}
+
+})
+
+if(error){
+alert(error.message)
+return
+}
+
+alert("Account created!")
+
+window.location.href="/"
+
+}
+
+</script>
+
+</body>
+</html>
