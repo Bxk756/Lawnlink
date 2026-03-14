@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>LawnLink Sign Up</title>
+<title>LawnLink Login</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -40,37 +40,16 @@ display:flex;
 align-items:center;
 justify-content:center;
 color:white;
-font-size:28px;
+font-size:26px;
 }
 
 h1{
 margin-top:16px;
-margin-bottom:5px;
 }
 
 .subtitle{
 color:#777;
 margin-bottom:30px;
-}
-
-.role{
-display:flex;
-gap:10px;
-margin-bottom:20px;
-}
-
-.role button{
-flex:1;
-padding:12px;
-border-radius:10px;
-border:2px solid #ddd;
-background:white;
-cursor:pointer;
-}
-
-.role button.active{
-border-color:#1a9b6b;
-background:#e8f7f2;
 }
 
 input{
@@ -81,7 +60,7 @@ border-radius:10px;
 border:1px solid #ddd;
 }
 
-.primary{
+button{
 width:100%;
 padding:14px;
 margin-top:20px;
@@ -110,26 +89,17 @@ color:#666;
 <div class="logo">🌿</div>
 
 <h1>LawnLink</h1>
-<div class="subtitle">Join our landscaping community</div>
-
-<h2>Create Account</h2>
-
-<div class="role">
-
-<button id="homeowner" class="active">Homeowner</button>
-<button id="pro">Landscaper</button>
-
-</div>
+<div class="subtitle">Sign in to your account</div>
 
 <input id="email" type="email" placeholder="Email">
 
 <input id="password" type="password" placeholder="Password">
 
-<button class="primary" onclick="signup()">Join LawnLink</button>
+<button onclick="login()">Sign In</button>
 
 <div class="footer">
-Already have an account?
-<a href="/login.html">Sign in</a>
+Don't have an account?
+<a href="signup.html">Create one</a>
 </div>
 
 </div>
@@ -137,46 +107,24 @@ Already have an account?
 <script>
 
 const SUPABASE_URL = "https://zapztkpavvtslvmjzxbh.supabase.co"
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
-const { createClient } = supabase
-
-const client = createClient(
+const supabase = window.supabase.createClient(
 SUPABASE_URL,
-SUPABASE_ANON_KEY
+SUPABASE_ANON
 )
 
-let role = "homeowner"
-
-const homeownerBtn = document.getElementById("homeowner")
-const proBtn = document.getElementById("pro")
-
-homeownerBtn.onclick = () => {
-role="homeowner"
-homeownerBtn.classList.add("active")
-proBtn.classList.remove("active")
-}
-
-proBtn.onclick = () => {
-role="pro"
-proBtn.classList.add("active")
-homeownerBtn.classList.remove("active")
-}
-
-async function signup(){
+async function login(){
 
 const email = document.getElementById("email").value
 const password = document.getElementById("password").value
 
-const { data, error } = await client.auth.signUp({
-email: email,
-password: password,
-options:{
-data:{
-role: role
-}
-}
+const {data,error} = await supabase.auth.signInWithPassword({
+
+email:email,
+password:password
+
 })
 
 if(error){
@@ -184,9 +132,9 @@ alert(error.message)
 return
 }
 
-alert("Account created! Check your email.")
+alert("Login successful!")
 
-window.location.href = "/login.html"
+window.location.href="/"
 
 }
 
