@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>LawnLink Dashboard</title>
+<title>LawnLink Marketplace</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/supabase.js"></script>
@@ -14,8 +14,8 @@
 
 body{
 font-family:system-ui;
-background:#f5f5f5;
 margin:0;
+background:#f5f5f5;
 }
 
 header{
@@ -32,17 +32,12 @@ margin:auto;
 padding:40px;
 }
 
-.card{
+.job{
 background:white;
 padding:20px;
 border-radius:12px;
 margin-bottom:20px;
-}
-
-input{
-width:100%;
-padding:12px;
-margin-top:10px;
+box-shadow:0 5px 15px rgba(0,0,0,.05);
 }
 
 button{
@@ -52,6 +47,7 @@ background:#16a34a;
 color:white;
 border:none;
 border-radius:8px;
+cursor:pointer;
 }
 
 </style>
@@ -62,57 +58,70 @@ border-radius:8px;
 
 <header>
 
-<h2>LawnLink Dashboard</h2>
+<h2>Job Marketplace</h2>
 
-<div>
-
-<button onclick="openMarketplace()">Marketplace</button>
 <button onclick="logout()">Logout</button>
-
-</div>
 
 </header>
 
 <div class="container">
 
-<div class="card">
-
-<h3>Create Job</h3>
-
-<input id="title" placeholder="Job title">
-
-<input id="price" placeholder="Price">
-
-<button onclick="createJob()">Post Job</button>
-
-</div>
+<div id="jobs"></div>
 
 </div>
 
 <script>
 
-async function createJob(){
+async function loadJobs(){
 
-const title=document.getElementById("title").value
-const price=document.getElementById("price").value
+const { data } = await client
+.from("jobs")
+.select("*")
+.order("created_at",{ascending:false})
+
+const container=document.getElementById("jobs")
+
+container.innerHTML=""
+
+data.forEach(job=>{
+
+const div=document.createElement("div")
+
+div.className="job"
+
+div.innerHTML=`
+
+<h3>${job.title}</h3>
+
+<p>$${job.price}</p>
+
+<p>Status: ${job.status}</p>
+
+<button onclick="acceptJob('${job.id}')">
+Accept Job
+</button>
+
+`
+
+container.appendChild(div)
+
+})
+
+}
+
+async function acceptJob(jobId){
 
 const { data:{ user } } = await client.auth.getUser()
 
-await client.from("jobs").insert([
-{
-title:title,
-price:price,
-customer_id:user.id
-}
-])
+await client
+.from("jobs")
+.update({
+landscaper_id:user.id,
+status:"accepted"
+})
+.eq("id",jobId)
 
-alert("Job posted!")
-
-}
-
-function openMarketplace(){
-
-window.location="/marketplace.html"
+loadJobs()
 
 }
 
@@ -123,6 +132,8 @@ await client.auth.signOut()
 window.location="/login.html"
 
 }
+
+loadJobs()
 
 </script>
 
