@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8">
@@ -10,31 +11,80 @@
 <style>
 
 body{
-font-family:Arial;
+font-family:Arial, sans-serif;
+margin:0;
 background:#f5f5f5;
-padding:40px;
+color:#222;
+}
+
+header{
+background:#2e8b57;
+color:white;
+padding:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header h1{
+margin:0;
 }
 
 .container{
-max-width:600px;
+max-width:900px;
 margin:auto;
+padding:40px 20px;
 }
 
-.service{
+.hero{
+text-align:center;
+margin-bottom:40px;
+}
+
+.hero h2{
+font-size:36px;
+margin-bottom:10px;
+}
+
+.hero p{
+color:#666;
+}
+
+.services{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+}
+
+.card{
 background:white;
-padding:20px;
-margin-bottom:20px;
-border-radius:10px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
+padding:25px;
+border-radius:12px;
+box-shadow:0 4px 15px rgba(0,0,0,0.08);
+}
+
+.card h3{
+margin-top:0;
+}
+
+.price{
+font-size:20px;
+font-weight:bold;
+margin:10px 0;
 }
 
 button{
 background:#22c55e;
-color:white;
 border:none;
+color:white;
 padding:12px 20px;
 border-radius:8px;
+font-size:16px;
 cursor:pointer;
+}
+
+button:hover{
+background:#16a34a;
 }
 
 </style>
@@ -43,17 +93,33 @@ cursor:pointer;
 
 <body>
 
-<div class="container">
+<header>
 
 <h1>LawnLink</h1>
 
-<h3>On-Demand Landscaping</h3>
+<div>☰</div>
 
-<div class="service">
+</header>
 
-<h2>Front Yard Mowing</h2>
 
-<p>$45</p>
+<div class="container">
+
+<div class="hero">
+
+<h2>On-Demand Landscaping Services in Minutes</h2>
+
+<p>Connect with local landscapers instantly. No waiting weeks for quotes.</p>
+
+</div>
+
+
+<div class="services">
+
+<div class="card">
+
+<h3>Front Yard Mowing</h3>
+
+<div class="price">$45</div>
 
 <button onclick="pay('Front Yard Mowing',45)">
 Pay with Stripe
@@ -61,11 +127,12 @@ Pay with Stripe
 
 </div>
 
-<div class="service">
 
-<h2>Backyard Landscaping</h2>
+<div class="card">
 
-<p>$120</p>
+<h3>Backyard Landscaping</h3>
+
+<div class="price">$120</div>
 
 <button onclick="pay('Backyard Landscaping',120)">
 Pay with Stripe
@@ -73,11 +140,12 @@ Pay with Stripe
 
 </div>
 
-<div class="service">
 
-<h2>Weed Removal</h2>
+<div class="card">
 
-<p>$60</p>
+<h3>Weed Removal</h3>
+
+<div class="price">$60</div>
 
 <button onclick="pay('Weed Removal',60)">
 Pay with Stripe
@@ -85,7 +153,23 @@ Pay with Stripe
 
 </div>
 
+
+<div class="card">
+
+<h3>Full Lawn Cleanup</h3>
+
+<div class="price">$150</div>
+
+<button onclick="pay('Full Lawn Cleanup',150)">
+Pay with Stripe
+</button>
+
 </div>
+
+</div>
+
+</div>
+
 
 <script>
 
@@ -113,6 +197,7 @@ window.location = data.url
 }
 
 </script>
+
 
 </body>
 </html>
