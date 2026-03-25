@@ -2,18 +2,9 @@
   "name": "lawnlink",
   "version": "1.0.0",
   "description": "LawnLink Landscaping Marketplace Backend",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "dev": "vercel dev"
   },
-  "keywords": [
-    "lawnlink",
-    "landscaping",
-    "marketplace",
-    "stripe"
-  ],
-  "author": "Brian Kelley",
-  "license": "ISC",
   "dependencies": {
     "@supabase/supabase-js": "^2.99.1",
     "cors": "^2.8.5",
