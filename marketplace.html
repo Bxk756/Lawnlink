@@ -1,140 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <title>LawnLink Marketplace</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
 
-<title>LawnLink Marketplace</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/supabase.js"></script>
+    header {
+      background: #1db954;
+      color: white;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
 
-<style>
+    .container {
+      padding: 20px;
+    }
 
-body{
-font-family:system-ui;
-margin:0;
-background:#f5f5f5;
-}
+    #map {
+      height: 300px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
 
-header{
-background:#16a34a;
-color:white;
-padding:20px;
-display:flex;
-justify-content:space-between;
-}
+    .job {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
 
-.container{
-max-width:900px;
-margin:auto;
-padding:40px;
-}
-
-.job{
-background:white;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-box-shadow:0 5px 15px rgba(0,0,0,.05);
-}
-
-button{
-margin-top:10px;
-padding:10px 14px;
-background:#16a34a;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
-}
-
-</style>
-
+    button {
+      background: #1db954;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
 <header>
-
-<h2>Job Marketplace</h2>
-
-<button onclick="logout()">Logout</button>
-
+  Job Marketplace
+  <span>Logout</span>
 </header>
 
 <div class="container">
-
-<div id="jobs"></div>
-
+  <div id="map"></div>
+  <div id="jobs"></div>
 </div>
 
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
 <script>
+mapboxgl.accessToken = "pk.eyJ1IjoiYnhrNzU3IiwiYSI6ImNtbnFzZzhzMzBhYWgyc3EzaWRteHgzanMifQ.0SxZfEeRvKHEuSxnF4dq9A";
 
-async function loadJobs(){
+const map = new mapboxgl.Map({
+  container: "map",
+  style: "mapbox://styles/mapbox/streets-v11",
+  center: [-76.0515, 36.8529],
+  zoom: 12
+});
 
-const { data } = await client
-.from("jobs")
-.select("*")
-.order("created_at",{ascending:false})
+let markers = [];
 
-const container=document.getElementById("jobs")
+map.on("load", () => {
+  loadJobs();
+});
 
-container.innerHTML=""
+async function loadJobs() {
+  const res = await fetch("/api/jobs");
+  const jobs = await res.json();
 
-data.forEach(job=>{
+  const container = document.getElementById("jobs");
+  container.innerHTML = "";
 
-const div=document.createElement("div")
+  markers.forEach(m => m.remove());
+  markers = [];
 
-div.className="job"
+  jobs.forEach(job => {
 
-div.innerHTML=`
+    const div = document.createElement("div");
+    div.className = "job";
 
-<h3>${job.title}</h3>
+    div.innerHTML = `
+      <h3>${job.title}</h3>
+      <p>$${job.price}</p>
+      <button onclick="acceptJob(${job.id})">Accept Job</button>
+    `;
 
-<p>$${job.price}</p>
+    container.appendChild(div);
 
-<p>Status: ${job.status}</p>
+    if (job.lat && job.lng) {
+      const marker = new mapboxgl.Marker()
+        .setLngLat([job.lng, job.lat])
+        .addTo(map);
 
-<button onclick="acceptJob('${job.id}')">
-Accept Job
-</button>
-
-`
-
-container.appendChild(div)
-
-})
-
+      markers.push(marker);
+    }
+  });
 }
 
-async function acceptJob(jobId){
+async function acceptJob(jobId) {
+  await fetch("/api/accept-job", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ jobId, landscaperId: 1 })
+  });
 
-const { data:{ user } } = await client.auth.getUser()
-
-await client
-.from("jobs")
-.update({
-landscaper_id:user.id,
-status:"accepted"
-})
-.eq("id",jobId)
-
-loadJobs()
-
+  alert("Job accepted!");
+  loadJobs();
 }
-
-async function logout(){
-
-await client.auth.signOut()
-
-window.location="/login.html"
-
-}
-
-loadJobs()
-
 </script>
 
 </body>
