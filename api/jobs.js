@@ -7,8 +7,8 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
 
+  // ✅ GET ALL JOBS
   if (req.method === 'GET') {
-
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
@@ -20,16 +20,20 @@ export default async function handler(req, res) {
     return res.status(200).json(data)
   }
 
+  // ✅ CREATE JOB (WITH LOCATION)
   if (req.method === 'POST') {
 
-    const { title, price } = req.body
+    const { title, price, lat, lng } = req.body
 
     const { data, error } = await supabase
       .from('jobs')
       .insert([
         {
           title,
-          price
+          price,
+          lat,
+          lng,
+          status: 'open'
         }
       ])
 
@@ -40,4 +44,6 @@ export default async function handler(req, res) {
     return res.status(200).json(data)
   }
 
+  // ❌ METHOD NOT ALLOWED
+  return res.status(405).json({ error: 'Method not allowed' })
 }
