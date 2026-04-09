@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <title>LawnLink Marketplace</title>
 
+  <!-- Mapbox -->
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
   <style>
     body {
@@ -17,28 +19,32 @@
       background: #1db954;
       color: white;
       padding: 20px;
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
       display: flex;
       justify-content: space-between;
     }
 
-    .container {
-      padding: 20px;
-    }
-
     #map {
       height: 300px;
-      border-radius: 10px;
-      margin-bottom: 20px;
+    }
+
+    .container {
+      padding: 15px;
     }
 
     .job {
       background: white;
-      padding: 20px;
-      border-radius: 10px;
+      padding: 15px;
+      border-radius: 12px;
       margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .job img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
     }
 
     button {
@@ -46,8 +52,15 @@
       color: white;
       border: none;
       padding: 10px;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .distance {
+      font-size: 14px;
+      color: gray;
     }
   </style>
 </head>
@@ -56,77 +69,158 @@
 
 <header>
   Job Marketplace
-  <span>Logout</span>
+  <span onclick="logout()" style="cursor:pointer;">Logout</span>
 </header>
 
-<div class="container">
-  <div id="map"></div>
-  <div id="jobs"></div>
-</div>
+<div id="map"></div>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<div class="container" id="jobs"></div>
 
 <script>
-mapboxgl.accessToken = "pk.eyJ1IjoiYnhrNzU3IiwiYSI6ImNtbnFzZzhzMzBhYWgyc3EzaWRteHgzanMifQ.0SxZfEeRvKHEuSxnF4dq9A";
+  // 🔑 MAPBOX TOKEN (FIXED - NO LINE BREAKS)
+  mapboxgl.accessToken = "pk.eyJ1IjoiYnhrNzU3IiwiYSI6ImNtbnFzZzhzMzBhYWgyc3EzaWRteHgzanMifQ.0SxZfEeRvKHEuSxnF4dq9A";
 
-const map = new mapboxgl.Map({
-  container: "map",
-  style: "mapbox://styles/mapbox/streets-v11",
-  center: [-76.0515, 36.8529],
-  zoom: 12
-});
+  let userLat = null;
+  let userLng = null;
+  let map;
 
-let markers = [];
-
-map.on("load", () => {
-  loadJobs();
-});
-
-async function loadJobs() {
-  const res = await fetch("/api/jobs");
-  const jobs = await res.json();
-
-  const container = document.getElementById("jobs");
-  container.innerHTML = "";
-
-  markers.forEach(m => m.remove());
-  markers = [];
-
-  jobs.forEach(job => {
-
-    const div = document.createElement("div");
-    div.className = "job";
-
-    div.innerHTML = `
-      <h3>${job.title}</h3>
-      <p>$${job.price}</p>
-      <button onclick="acceptJob(${job.id})">Accept Job</button>
-    `;
-
-    container.appendChild(div);
-
-    if (job.lat && job.lng) {
-      const marker = new mapboxgl.Marker()
-        .setLngLat([job.lng, job.lat])
-        .addTo(map);
-
-      markers.push(marker);
-    }
-  });
-}
-
-async function acceptJob(jobId) {
-  await fetch("/api/accept-job", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
+  // 📍 GET USER LOCATION
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      initMap();
+      loadJobs();
     },
-    body: JSON.stringify({ jobId, landscaperId: 1 })
-  });
+    (err) => {
+      alert("Location required");
+      console.error(err);
+    }
+  );
 
-  alert("Job accepted!");
-  loadJobs();
-}
+  // 🗺️ INIT MAP
+  function initMap() {
+    map = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/streets-v11",
+      center: [userLng, userLat],
+      zoom: 12
+    });
+
+    // 👤 User marker
+    new mapboxgl.Marker({ color: "blue" })
+      .setLngLat([userLng, userLat])
+      .addTo(map);
+  }
+
+  // 📏 DISTANCE
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+
+    const a =
+      Math.sin(dLat/2) ** 2 +
+      Math.cos(lat1 * Math.PI/180) *
+      Math.cos(lat2 * Math.PI/180) *
+      Math.sin(dLon/2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return (R * c).toFixed(2);
+  }
+
+  // 📦 LOAD JOBS
+  async function loadJobs() {
+    try {
+      const res = await fetch("/api/jobs");
+      const jobs = await res.json();
+
+      const container = document.getElementById("jobs");
+      container.innerHTML = "";
+
+      jobs.forEach(job => {
+
+        const distance = (job.lat && job.lng)
+          ? getDistance(userLat, userLng, job.lat, job.lng)
+          : null;
+
+        const div = document.createElement("div");
+        div.className = "job";
+
+        div.innerHTML = `
+          ${job.image ? `<img src="${job.image}" />` : ""}
+          <h3>${job.title}</h3>
+          <p>$${job.price}</p>
+          <p>Status: ${job.status}</p>
+          ${distance ? `<p class="distance">${distance} km away</p>` : ""}
+
+          <button onclick="acceptJob(${job.id})">Accept Job</button>
+
+          ${job.lat && job.lng ? `
+            <button onclick="openDirections(${job.lat}, ${job.lng})">
+              📍 Navigate
+            </button>
+          ` : ""}
+        `;
+
+        container.appendChild(div);
+
+        // 📍 ADD MARKER
+        if (job.lat && job.lng && map) {
+          new mapboxgl.Marker()
+            .setLngLat([job.lng, job.lat])
+            .setPopup(
+              new mapboxgl.Popup().setHTML(`
+                <h4>${job.title}</h4>
+                <p>$${job.price}</p>
+              `)
+            )
+            .addTo(map);
+        }
+      });
+
+    } catch (err) {
+      console.error("Error loading jobs:", err);
+    }
+  }
+
+  // 🚀 DIRECTIONS (Google Maps)
+  function openDirections(lat, lng) {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, "_blank");
+  }
+
+  // ✅ ACCEPT JOB
+  async function acceptJob(jobId) {
+    try {
+      const res = await fetch("/api/accept-job", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          jobId,
+          landscaperId: 1
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.error) {
+        alert(data.error);
+      } else {
+        alert("Job accepted!");
+        loadJobs();
+      }
+
+    } catch (err) {
+      console.error("Accept job error:", err);
+    }
+  }
+
+  function logout() {
+    window.location.href = "/login.html";
+  }
 </script>
 
 </body>

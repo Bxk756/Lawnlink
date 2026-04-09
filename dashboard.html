@@ -1,129 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <title>LawnLink Dashboard</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<title>LawnLink Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/js/supabase.js"></script>
+    header {
+      background: #1db954;
+      color: white;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
 
-<style>
+    .container {
+      padding: 20px;
+    }
 
-body{
-font-family:system-ui;
-background:#f5f5f5;
-margin:0;
-}
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
 
-header{
-background:#16a34a;
-color:white;
-padding:20px;
-display:flex;
-justify-content:space-between;
-}
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
 
-.container{
-max-width:900px;
-margin:auto;
-padding:40px;
-}
+    button {
+      background: #1db954;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
 
-.card{
-background:white;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-}
-
-input{
-width:100%;
-padding:12px;
-margin-top:10px;
-}
-
-button{
-margin-top:10px;
-padding:10px 14px;
-background:#16a34a;
-color:white;
-border:none;
-border-radius:8px;
-}
-
-</style>
-
+    img {
+      width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
 <header>
-
-<h2>LawnLink Dashboard</h2>
-
-<div>
-
-<button onclick="openMarketplace()">Marketplace</button>
-<button onclick="logout()">Logout</button>
-
-</div>
-
+  LawnLink Dashboard
+  <span onclick="logout()" style="cursor:pointer;">Logout</span>
 </header>
 
 <div class="container">
 
-<div class="card">
+  <div class="card">
+    <h2>Create Job</h2>
 
-<h3>Create Job</h3>
+    <input id="title" placeholder="Job title" />
+    <input id="price" placeholder="Price" type="number" />
 
-<input id="title" placeholder="Job title">
+    <!-- 📸 Image Upload -->
+    <input type="file" id="image" />
 
-<input id="price" placeholder="Price">
+    <!-- Preview -->
+    <img id="preview" style="display:none;" />
 
-<button onclick="createJob()">Post Job</button>
-
-</div>
+    <button onclick="createJob()">Post Job</button>
+  </div>
 
 </div>
 
 <script>
+  // 🔑 YOUR SUPABASE KEYS
+  const supabase = window.supabase.createClient(
+    "https://zapztkpavvtslvmjzxbh.supabase.co", 
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+  );
 
-async function createJob(){
+  let userLat = null;
+  let userLng = null;
+  let uploadedImageUrl = null;
 
-const title=document.getElementById("title").value
-const price=document.getElementById("price").value
+  // 📍 GET USER LOCATION
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userLat = pos.coords.latitude;
+      userLng = pos.coords.longitude;
+      console.log("Location:", userLat, userLng);
+    },
+    () => {
+      alert("Location required to post job");
+    }
+  );
 
-const { data:{ user } } = await client.auth.getUser()
+  // 📸 IMAGE PREVIEW + UPLOAD
+  document.getElementById("image").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-await client.from("jobs").insert([
-{
-title:title,
-price:price,
-customer_id:user.id
-}
-])
+    // preview
+    const preview = document.getElementById("preview");
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = "block";
 
-alert("Job posted!")
+    // upload to Supabase Storage
+    const fileName = Date.now() + "-" + file.name;
 
-}
+    const { data, error } = await supabase.storage
+      .from("job-images")
+      .upload(fileName, file);
 
-function openMarketplace(){
+    if (error) {
+      alert("Image upload failed");
+      console.log(error);
+      return;
+    }
 
-window.location="/marketplace.html"
+    const { data: urlData } = supabase.storage
+      .from("job-images")
+      .getPublicUrl(fileName);
 
-}
+    uploadedImageUrl = urlData.publicUrl;
+    console.log("Image URL:", uploadedImageUrl);
+  });
 
-async function logout(){
+  // 🚀 CREATE JOB
+  async function createJob() {
 
-await client.auth.signOut()
+    const title = document.getElementById("title").value;
+    const price = document.getElementById("price").value;
 
-window.location="/login.html"
+    if (!title || !price) {
+      alert("Fill all fields");
+      return;
+    }
 
-}
+    if (!userLat || !userLng) {
+      alert("Location not ready");
+      return;
+    }
 
+    const res = await fetch("/api/jobs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title,
+        price,
+        lat: userLat,
+        lng: userLng,
+        image: uploadedImageUrl
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      alert("Error creating job");
+      console.log(data.error);
+    } else {
+      alert("Job posted!");
+      window.location.href = "/marketplace.html";
+    }
+  }
+
+  function logout() {
+    window.location.href = "/login.html";
+  }
 </script>
 
 </body>
