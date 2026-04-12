@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>LawnLink Dashboard</title>
 
-  <!-- Supabase -->
+  <!-- ✅ ONLY ONE SUPABASE SCRIPT -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -88,7 +88,7 @@
 </div>
 
 <script>
-  // ✅ Supabase client
+  // ✅ DEFINE SUPABASE ONLY ONCE
   const supabase = window.supabase.createClient(
     "https://zapztkpavvtslvmjzxbh.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
@@ -97,19 +97,17 @@
   let userLat = null
   let userLng = null
 
-  // 📍 Get location
   navigator.geolocation.getCurrentPosition(
     (pos) => {
       userLat = pos.coords.latitude
       userLng = pos.coords.longitude
-      console.log("Location:", userLat, userLng)
     },
     () => {
-      alert("Location required to post job")
+      alert("Location required")
     }
   )
 
-  // 📸 Image preview
+  // 📸 Preview
   document.getElementById("image").addEventListener("change", (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -117,14 +115,12 @@
     }
   })
 
-  // 🚀 CREATE JOB
   async function createJob() {
 
     const title = document.getElementById("title").value
     const price = parseFloat(document.getElementById("price").value)
     const file = document.getElementById("image").files[0]
 
-    // ✅ Validation
     if (!title || !price) {
       alert("Enter title and price")
       return
@@ -147,7 +143,7 @@
 
       if (error) {
         console.log(error)
-        alert("Image upload failed")
+        alert("Upload failed")
         return
       }
 
@@ -158,7 +154,7 @@
       imageUrl = data.publicUrl
     }
 
-    // 📡 SEND TO YOUR LIVE API (FIXED)
+    // 📡 API CALL
     try {
       const res = await fetch("https://api.lawnlink.cloud/api/jobs", {
         method: "POST",
@@ -175,14 +171,13 @@
       })
 
       const data = await res.json()
-      console.log("API RESPONSE:", data)
+      console.log(data)
 
       if (data.error) {
         document.getElementById("status").innerText = data.error
       } else {
         document.getElementById("status").innerText = "✅ Job posted!"
 
-        // reset form
         document.getElementById("title").value = ""
         document.getElementById("price").value = ""
         document.getElementById("image").value = ""
@@ -190,8 +185,8 @@
       }
 
     } catch (err) {
-      console.log("ERROR:", err)
-      alert("API failed — check console")
+      console.log(err)
+      alert("API error")
     }
   }
 
