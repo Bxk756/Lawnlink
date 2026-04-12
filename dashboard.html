@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>LawnLink Dashboard</title>
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -32,6 +33,7 @@
       border-radius: 10px;
       max-width: 400px;
       margin: auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     input {
@@ -50,10 +52,7 @@
       width: 100%;
       border-radius: 5px;
       cursor: pointer;
-    }
-
-    button:disabled {
-      background: gray;
+      font-weight: bold;
     }
 
     img {
@@ -72,6 +71,7 @@
 </header>
 
 <div class="container">
+
   <div class="card">
     <h2>Create Job</h2>
 
@@ -79,118 +79,124 @@
     <input id="price" type="number" placeholder="Price" />
     <input type="file" id="image" />
 
-    <button id="submitBtn" onclick="createJob()">Post Job</button>
+    <button onclick="createJob()">Post Job</button>
 
     <p id="status"></p>
     <img id="preview" />
   </div>
+
 </div>
 
 <script>
-  // ✅ YOUR REAL SUPABASE CONNECTION (WORKING)
+  // ✅ Supabase client
   const supabase = window.supabase.createClient(
     "https://zapztkpavvtslvmjzxbh.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
-  );
+  )
 
-  let userLat = null;
-  let userLng = null;
+  let userLat = null
+  let userLng = null
 
-  // 📍 LOCATION
+  // 📍 Get location
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      userLat = pos.coords.latitude;
-      userLng = pos.coords.longitude;
-      console.log("Location:", userLat, userLng);
+      userLat = pos.coords.latitude
+      userLng = pos.coords.longitude
+      console.log("Location:", userLat, userLng)
     },
-    () => alert("Location required")
-  );
-
-  // 📸 PREVIEW
-  document.getElementById("image").addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      document.getElementById("preview").src = URL.createObjectURL(file);
+    () => {
+      alert("Location required to post job")
     }
-  });
+  )
 
+  // 📸 Image preview
+  document.getElementById("image").addEventListener("change", (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      document.getElementById("preview").src = URL.createObjectURL(file)
+    }
+  })
+
+  // 🚀 CREATE JOB
   async function createJob() {
-    const btn = document.getElementById("submitBtn");
-    const status = document.getElementById("status");
 
-    const title = document.getElementById("title").value;
-    const price = parseFloat(document.getElementById("price").value);
-    const file = document.getElementById("image").files[0];
+    const title = document.getElementById("title").value
+    const price = parseFloat(document.getElementById("price").value)
+    const file = document.getElementById("image").files[0]
 
-    btn.disabled = true;
-    status.innerText = "Posting...";
-
-    // VALIDATION
+    // ✅ Validation
     if (!title || !price) {
-      alert("Enter title + price");
-      btn.disabled = false;
-      return;
+      alert("Enter title and price")
+      return
     }
 
     if (!userLat || !userLng) {
-      alert("Waiting for location...");
-      btn.disabled = false;
-      return;
+      alert("Waiting for location...")
+      return
     }
 
-    let imageUrl = null;
+    let imageUrl = null
 
-    // 📤 UPLOAD IMAGE
+    // 📤 Upload image
     if (file) {
-      const fileName = `${Date.now()}-${Math.random()}-${file.name}`;
+      const fileName = Date.now() + "-" + file.name
 
       const { error } = await supabase.storage
         .from("job-images")
-        .upload(fileName, file);
+        .upload(fileName, file)
 
       if (error) {
-        alert("Upload failed");
-        console.log(error);
-        btn.disabled = false;
-        return;
+        console.log(error)
+        alert("Image upload failed")
+        return
       }
 
       const { data } = supabase.storage
         .from("job-images")
-        .getPublicUrl(fileName);
+        .getPublicUrl(fileName)
 
-      imageUrl = data.publicUrl;
-      console.log("Image URL:", imageUrl);
+      imageUrl = data.publicUrl
     }
 
-    // 📡 SEND TO API
-    const res = await fetch("/api/jobs", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title,
-        price,
-        lat: userLat,
-        lng: userLng,
-        image: imageUrl
+    // 📡 SEND TO YOUR LIVE API (FIXED)
+    try {
+      const res = await fetch("https://api.lawnlink.cloud/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          title,
+          price,
+          lat: userLat,
+          lng: userLng,
+          image: imageUrl
+        })
       })
-    });
 
-    const data = await res.json();
+      const data = await res.json()
+      console.log("API RESPONSE:", data)
 
-    if (data.error) {
-      status.innerText = data.error;
-    } else {
-      status.innerText = "✅ Job posted!";
+      if (data.error) {
+        document.getElementById("status").innerText = data.error
+      } else {
+        document.getElementById("status").innerText = "✅ Job posted!"
+
+        // reset form
+        document.getElementById("title").value = ""
+        document.getElementById("price").value = ""
+        document.getElementById("image").value = ""
+        document.getElementById("preview").src = ""
+      }
+
+    } catch (err) {
+      console.log("ERROR:", err)
+      alert("API failed — check console")
     }
-
-    btn.disabled = false;
   }
 
   function logout() {
-    window.location.href = "/login.html";
+    window.location.href = "/login.html"
   }
 </script>
 
