@@ -1,50 +1,31 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-)
-
 export default async function handler(req, res) {
 
-  // GET JOBS
-  if (req.method === 'GET') {
-    const { data, error } = await supabase
-      .from('jobs')
-      .select('*')
-
-    if (error) return res.status(500).json({ error })
-
-    return res.status(200).json(data)
+  // ✅ Allow POST
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" })
   }
 
-  // CREATE JOB
-  if (req.method === 'POST') {
+  try {
+    const { title, price } = req.body
 
-    const { title, price, lat, lng, image } = req.body
+    console.log("📥 Incoming:", req.body)
 
-    console.log("Incoming job:", req.body)
-
-    const { data, error } = await supabase
-      .from('jobs')
-      .insert([
-        {
-          title,
-          price,
-          lat,
-          lng,
-          image, // ✅ THIS WAS MISSING
-          status: 'open'
-        }
-      ])
-
-    if (error) {
-      console.log("DB ERROR:", error)
-      return res.status(500).json({ error })
+    // ✅ Validate
+    if (!title || !price) {
+      return res.status(400).json({ error: "Missing fields" })
     }
 
-    return res.status(200).json(data)
-  }
+    // ✅ Fake success (for now)
+    return res.status(200).json({
+      success: true,
+      job: {
+        title,
+        price
+      }
+    })
 
-  return res.status(405).json({ error: 'Method not allowed' })
+  } catch (err) {
+    console.error("❌ ERROR:", err)
+    return res.status(500).json({ error: "Server error" })
+  }
 }
