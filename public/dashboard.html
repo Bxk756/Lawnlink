@@ -1,195 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
   <title>LawnLink Dashboard</title>
 
-  <!-- Supabase (ONLY ONCE) -->
+  <!-- LOAD ONCE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #f5f5f5;
-    }
-
-    header {
-      background: #1db954;
-      color: white;
-      padding: 20px;
-      font-size: 24px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .container {
-      padding: 20px;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 400px;
-      margin: auto;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      background: #1db954;
-      color: white;
-      border: none;
-      padding: 10px;
-      width: 100%;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    img {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-  </style>
 </head>
 
 <body>
 
-<header>
-  LawnLink Dashboard
-  <span onclick="logout()">Logout</span>
-</header>
+<h2>Create Job</h2>
 
-<div class="container">
-  <div class="card">
-    <h2>Create Job</h2>
+<input id="title" placeholder="Title"><br><br>
+<input id="price" placeholder="Price"><br><br>
+<input type="file" id="image"><br><br>
 
-    <input id="title" placeholder="Job title" />
-    <input id="price" type="number" placeholder="Price" />
-    <input type="file" id="image" />
+<button id="postBtn">Post Job</button>
 
-    <button onclick="createJob()">Post Job</button>
-
-    <p id="status"></p>
-    <img id="preview" />
-  </div>
-</div>
+<p id="status"></p>
 
 <script>
-  console.log("✅ CLEAN DASHBOARD LOADED")
+console.log("🔥 FINAL VERSION LOADED")
 
-  // ✅ SUPABASE (ONLY DECLARED ONCE)
+// 🔒 PREVENT DUPLICATE INIT
+if (!window._supabaseInitialized) {
+
+  window._supabaseInitialized = true
+
   const supabase = window.supabase.createClient(
     "https://zapztkpavvtslvmjzxbh.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
   )
 
-  let userLat = null
-  let userLng = null
-
-  // 📍 GET LOCATION
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      userLat = pos.coords.latitude
-      userLng = pos.coords.longitude
-      console.log("📍 Location:", userLat, userLng)
-    },
-    () => {
-      alert("Location required")
-    }
-  )
-
-  // 📸 IMAGE PREVIEW
-  document.getElementById("image").addEventListener("change", (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      document.getElementById("preview").src = URL.createObjectURL(file)
-    }
-  })
-
-  // 🚀 CREATE JOB
   async function createJob() {
-    console.log("🔥 BUTTON CLICKED")
+    console.log("✅ BUTTON CLICKED")
 
     const title = document.getElementById("title").value
-    const price = parseFloat(document.getElementById("price").value)
-    const file = document.getElementById("image").files[0]
+    const price = document.getElementById("price").value
 
-    if (!title || !price) {
-      alert("Enter title + price")
-      return
-    }
-
-    if (!userLat || !userLng) {
-      alert("Waiting for location...")
-      return
-    }
-
-    let imageUrl = null
-
-    // 📤 UPLOAD IMAGE
-    if (file) {
-      const fileName = Date.now() + "-" + file.name
-
-      const { error } = await supabase.storage
-        .from("job-images")
-        .upload(fileName, file)
-
-      if (error) {
-        console.log(error)
-        alert("Upload failed")
-        return
-      }
-
-      const { data } = supabase.storage
-        .from("job-images")
-        .getPublicUrl(fileName)
-
-      imageUrl = data.publicUrl
-      console.log("🖼️ Uploaded:", imageUrl)
-    }
-
-    // 📡 SEND TO API
-    const res = await fetch("/api/jobs", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title,
-        price,
-        lat: userLat,
-        lng: userLng,
-        image: imageUrl
+    try {
+      const res = await fetch("/api/jobs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title, price })
       })
-    })
 
-    const data = await res.json()
-    console.log("📦 API RESPONSE:", data)
+      const data = await res.json()
+      console.log("📦 API RESPONSE:", data)
 
-    if (data.error) {
-      document.getElementById("status").innerText = data.error
-    } else {
-      document.getElementById("status").innerText = "✅ Job posted!"
-
-      document.getElementById("title").value = ""
-      document.getElementById("price").value = ""
-      document.getElementById("image").value = ""
-      document.getElementById("preview").src = ""
+      document.getElementById("status").innerText = "Done"
+    } catch (err) {
+      console.error(err)
+      document.getElementById("status").innerText = "Error"
     }
   }
 
-  function logout() {
-    window.location.href = "/login.html"
-  }
+  // ✅ SAFE BUTTON BIND (NO INLINE onclick)
+  document.getElementById("postBtn").addEventListener("click", createJob)
+
+}
 </script>
 
 </body>
