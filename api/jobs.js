@@ -7,22 +7,23 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
 
+  // GET JOBS
   if (req.method === 'GET') {
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
 
-    if (error) {
-      console.log(error)
-      return res.status(500).json({ error })
-    }
+    if (error) return res.status(500).json({ error })
 
     return res.status(200).json(data)
   }
 
+  // CREATE JOB
   if (req.method === 'POST') {
 
     const { title, price, lat, lng, image } = req.body
+
+    console.log("Incoming job:", req.body)
 
     const { data, error } = await supabase
       .from('jobs')
@@ -32,13 +33,13 @@ export default async function handler(req, res) {
           price,
           lat,
           lng,
-          image,
+          image, // ✅ THIS WAS MISSING
           status: 'open'
         }
       ])
 
     if (error) {
-      console.log(error)
+      console.log("DB ERROR:", error)
       return res.status(500).json({ error })
     }
 
