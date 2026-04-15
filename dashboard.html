@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>LawnLink Dashboard</title>
 
-  <!-- Supabase -->
+  <!-- Supabase (ONLY ONCE) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -79,7 +79,7 @@
     <input id="price" type="number" placeholder="Price" />
     <input type="file" id="image" />
 
-    <button onclick="createJob()">Post Job</button>
+    <button id="postBtn">Post Job</button>
 
     <p id="status"></p>
     <img id="preview" />
@@ -88,110 +88,136 @@
 </div>
 
 <script>
-  // ✅ YOUR REAL KEY (WORKING)
-  const supabase = window.supabase.createClient(
-    "https://zapztkpavvtslvmjzxbh.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
-  )
+/* =========================
+   INIT (ONLY ONCE)
+========================= */
 
-  let userLat = null
-  let userLng = null
+const supabase = window.supabase.createClient(
+  "https://zapztkpavvtslvmjzxbh.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+)
 
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      userLat = pos.coords.latitude
-      userLng = pos.coords.longitude
-      console.log("Location:", userLat, userLng)
-    },
-    () => alert("Location required")
-  )
+/* =========================
+   LOCATION
+========================= */
 
-  document.getElementById("image").addEventListener("change", (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      document.getElementById("preview").src = URL.createObjectURL(file)
-    }
-  })
+let userLat = null
+let userLng = null
 
-  async function createJob() {
+navigator.geolocation.getCurrentPosition(
+  (pos) => {
+    userLat = pos.coords.latitude
+    userLng = pos.coords.longitude
+    console.log("Location:", userLat, userLng)
+  },
+  () => alert("Location required")
+)
 
-    console.log("BUTTON CLICKED")
+/* =========================
+   IMAGE PREVIEW
+========================= */
 
-    const title = document.getElementById("title").value
-    const price = parseFloat(document.getElementById("price").value)
-    const file = document.getElementById("image").files[0]
+document.getElementById("image").addEventListener("change", (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    document.getElementById("preview").src = URL.createObjectURL(file)
+  }
+})
 
-    if (!title || !price) {
-      alert("Enter title and price")
+/* =========================
+   CREATE JOB (NO GLOBAL BUG)
+========================= */
+
+async function createJob() {
+
+  console.log("CLICK WORKING")
+
+  const title = document.getElementById("title").value
+  const price = parseFloat(document.getElementById("price").value)
+  const file = document.getElementById("image").files[0]
+
+  if (!title || !price) {
+    alert("Enter title + price")
+    return
+  }
+
+  if (!userLat || !userLng) {
+    alert("Waiting for location...")
+    return
+  }
+
+  let imageUrl = null
+
+  // Upload image
+  if (file) {
+    const fileName = Date.now() + "-" + file.name
+
+    const { error } = await supabase.storage
+      .from("job-images")
+      .upload(fileName, file)
+
+    if (error) {
+      console.log(error)
+      alert("Upload failed")
       return
     }
 
-    if (!userLat || !userLng) {
-      alert("Waiting for location...")
-      return
-    }
+    const { data } = supabase.storage
+      .from("job-images")
+      .getPublicUrl(fileName)
 
-    let imageUrl = null
+    imageUrl = data.publicUrl
+  }
 
-    if (file) {
-      const fileName = Date.now() + "-" + file.name
-
-      const { error } = await supabase.storage
-        .from("job-images")
-        .upload(fileName, file)
-
-      if (error) {
-        console.log("UPLOAD ERROR:", error)
-        alert("Upload failed")
-        return
-      }
-
-      const { data } = supabase.storage
-        .from("job-images")
-        .getPublicUrl(fileName)
-
-      imageUrl = data.publicUrl
-      console.log("Image URL:", imageUrl)
-    }
-
-    try {
-      const res = await fetch("/api/jobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          title,
-          price,
-          lat: userLat,
-          lng: userLng,
-          image: imageUrl
-        })
+  try {
+    const res = await fetch("/api/jobs", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title,
+        price,
+        lat: userLat,
+        lng: userLng,
+        image: imageUrl
       })
+    })
 
-      const data = await res.json()
-      console.log("API RESPONSE:", data)
+    const data = await res.json()
+    console.log(data)
 
-      if (data.error) {
-        document.getElementById("status").innerText = data.error
-      } else {
-        document.getElementById("status").innerText = "✅ Job posted!"
+    if (data.error) {
+      document.getElementById("status").innerText = data.error
+    } else {
+      document.getElementById("status").innerText = "✅ Job posted!"
 
-        document.getElementById("title").value = ""
-        document.getElementById("price").value = ""
-        document.getElementById("image").value = ""
-        document.getElementById("preview").src = ""
-      }
-
-    } catch (err) {
-      console.log("API ERROR:", err)
-      alert("API failed")
+      document.getElementById("title").value = ""
+      document.getElementById("price").value = ""
+      document.getElementById("image").value = ""
+      document.getElementById("preview").src = ""
     }
-  }
 
-  function logout() {
-    window.location.href = "/login.html"
+  } catch (err) {
+    console.log(err)
+    alert("API failed")
   }
+}
+
+/* =========================
+   FIX BUTTON (IMPORTANT)
+========================= */
+
+document.getElementById("postBtn").addEventListener("click", createJob)
+
+/* =========================
+   LOGOUT
+========================= */
+
+function logout() {
+  window.location.href = "/login.html"
+}
+
 </script>
 
 </body>
