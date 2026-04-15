@@ -7,12 +7,34 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    body { margin:0; font-family:Arial; background:#f5f5f5; }
-    header { background:#1db954; color:white; padding:20px; display:flex; justify-content:space-between; }
-    .container { padding:20px; }
-    .card { background:white; padding:20px; border-radius:10px; max-width:400px; margin:auto; }
-    input { width:100%; padding:10px; margin-bottom:10px; }
-    button { background:#1db954; color:white; padding:10px; width:100%; border:none; }
+    body { margin: 0; font-family: Arial; background: #f5f5f5; }
+    header {
+      background: #1db954;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .container { padding: 20px; }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      margin: auto;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #1db954;
+      color: white;
+      border: none;
+      padding: 10px;
+      width: 100%;
+    }
   </style>
 </head>
 
@@ -31,15 +53,13 @@
     <input id="price" type="number" placeholder="Price" />
     <input type="file" id="image" />
 
-    <button id="postBtn">Post Job</button>
+    <button onclick="createJob()">Post Job</button>
 
     <p id="status"></p>
-    <img id="preview" />
   </div>
 </div>
 
 <script>
-
 const supabase = window.supabase.createClient(
   "https://zapztkpavvtslvmjzxbh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
@@ -55,28 +75,15 @@ navigator.geolocation.getCurrentPosition(
   }
 )
 
-document.getElementById("image").addEventListener("change", (e) => {
-  const file = e.target.files[0]
-  if (file) {
-    document.getElementById("preview").src = URL.createObjectURL(file)
-  }
-})
-
 async function createJob() {
-
-  console.log("CLICK WORKING")
+  console.log("CLICKED")
 
   const title = document.getElementById("title").value
   const price = parseFloat(document.getElementById("price").value)
   const file = document.getElementById("image").files[0]
 
   if (!title || !price) {
-    alert("Enter title + price")
-    return
-  }
-
-  if (!userLat || !userLng) {
-    alert("Waiting for location...")
+    alert("Enter title and price")
     return
   }
 
@@ -116,17 +123,16 @@ async function createJob() {
 
   const data = await res.json()
 
-  console.log(data)
-
-  document.getElementById("status").innerText = "✅ Posted!"
+  if (data.error) {
+    document.getElementById("status").innerText = data.error
+  } else {
+    document.getElementById("status").innerText = "✅ Posted!"
+  }
 }
-
-document.getElementById("postBtn").addEventListener("click", createJob)
 
 function logout() {
   window.location.href = "/login.html"
 }
-
 </script>
 
 </body>
