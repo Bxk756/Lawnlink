@@ -4,62 +4,15 @@
   <meta charset="UTF-8" />
   <title>LawnLink Dashboard</title>
 
-  <!-- Supabase (ONLY ONCE) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #f5f5f5;
-    }
-
-    header {
-      background: #1db954;
-      color: white;
-      padding: 20px;
-      font-size: 24px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .container {
-      padding: 20px;
-    }
-
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 400px;
-      margin: auto;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      background: #1db954;
-      color: white;
-      border: none;
-      padding: 10px;
-      width: 100%;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    img {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
+    body { margin:0; font-family:Arial; background:#f5f5f5; }
+    header { background:#1db954; color:white; padding:20px; display:flex; justify-content:space-between; }
+    .container { padding:20px; }
+    .card { background:white; padding:20px; border-radius:10px; max-width:400px; margin:auto; }
+    input { width:100%; padding:10px; margin-bottom:10px; }
+    button { background:#1db954; color:white; padding:10px; width:100%; border:none; }
   </style>
 </head>
 
@@ -71,7 +24,6 @@
 </header>
 
 <div class="container">
-
   <div class="card">
     <h2>Create Job</h2>
 
@@ -84,22 +36,14 @@
     <p id="status"></p>
     <img id="preview" />
   </div>
-
 </div>
 
 <script>
-/* =========================
-   INIT (ONLY ONCE)
-========================= */
 
 const supabase = window.supabase.createClient(
   "https://zapztkpavvtslvmjzxbh.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 )
-
-/* =========================
-   LOCATION
-========================= */
 
 let userLat = null
 let userLng = null
@@ -108,14 +52,8 @@ navigator.geolocation.getCurrentPosition(
   (pos) => {
     userLat = pos.coords.latitude
     userLng = pos.coords.longitude
-    console.log("Location:", userLat, userLng)
-  },
-  () => alert("Location required")
+  }
 )
-
-/* =========================
-   IMAGE PREVIEW
-========================= */
 
 document.getElementById("image").addEventListener("change", (e) => {
   const file = e.target.files[0]
@@ -123,10 +61,6 @@ document.getElementById("image").addEventListener("change", (e) => {
     document.getElementById("preview").src = URL.createObjectURL(file)
   }
 })
-
-/* =========================
-   CREATE JOB (NO GLOBAL BUG)
-========================= */
 
 async function createJob() {
 
@@ -148,7 +82,6 @@ async function createJob() {
 
   let imageUrl = null
 
-  // Upload image
   if (file) {
     const fileName = Date.now() + "-" + file.name
 
@@ -169,50 +102,26 @@ async function createJob() {
     imageUrl = data.publicUrl
   }
 
-  try {
-    const res = await fetch("/api/jobs", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title,
-        price,
-        lat: userLat,
-        lng: userLng,
-        image: imageUrl
-      })
+  const res = await fetch("/api/jobs", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title,
+      price,
+      lat: userLat,
+      lng: userLng,
+      image: imageUrl
     })
+  })
 
-    const data = await res.json()
-    console.log(data)
+  const data = await res.json()
 
-    if (data.error) {
-      document.getElementById("status").innerText = data.error
-    } else {
-      document.getElementById("status").innerText = "✅ Job posted!"
+  console.log(data)
 
-      document.getElementById("title").value = ""
-      document.getElementById("price").value = ""
-      document.getElementById("image").value = ""
-      document.getElementById("preview").src = ""
-    }
-
-  } catch (err) {
-    console.log(err)
-    alert("API failed")
-  }
+  document.getElementById("status").innerText = "✅ Posted!"
 }
 
-/* =========================
-   FIX BUTTON (IMPORTANT)
-========================= */
-
 document.getElementById("postBtn").addEventListener("click", createJob)
-
-/* =========================
-   LOGOUT
-========================= */
 
 function logout() {
   window.location.href = "/login.html"
