@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>LawnLink Dashboard</title>
 
-  <!-- ✅ ONLY ONE SUPABASE SCRIPT -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -88,7 +88,7 @@
 </div>
 
 <script>
-  // ✅ DEFINE SUPABASE ONLY ONCE
+  // ✅ YOUR REAL KEY (WORKING)
   const supabase = window.supabase.createClient(
     "https://zapztkpavvtslvmjzxbh.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
@@ -101,13 +101,11 @@
     (pos) => {
       userLat = pos.coords.latitude
       userLng = pos.coords.longitude
+      console.log("Location:", userLat, userLng)
     },
-    () => {
-      alert("Location required")
-    }
+    () => alert("Location required")
   )
 
-  // 📸 Preview
   document.getElementById("image").addEventListener("change", (e) => {
     const file = e.target.files[0]
     if (file) {
@@ -116,6 +114,8 @@
   })
 
   async function createJob() {
+
+    console.log("BUTTON CLICKED")
 
     const title = document.getElementById("title").value
     const price = parseFloat(document.getElementById("price").value)
@@ -133,7 +133,6 @@
 
     let imageUrl = null
 
-    // 📤 Upload image
     if (file) {
       const fileName = Date.now() + "-" + file.name
 
@@ -142,7 +141,7 @@
         .upload(fileName, file)
 
       if (error) {
-        console.log(error)
+        console.log("UPLOAD ERROR:", error)
         alert("Upload failed")
         return
       }
@@ -152,11 +151,11 @@
         .getPublicUrl(fileName)
 
       imageUrl = data.publicUrl
+      console.log("Image URL:", imageUrl)
     }
 
-    // 📡 API CALL
     try {
-      const res = await fetch("https://api.lawnlink.cloud/api/jobs", {
+      const res = await fetch("/api/jobs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -171,7 +170,7 @@
       })
 
       const data = await res.json()
-      console.log(data)
+      console.log("API RESPONSE:", data)
 
       if (data.error) {
         document.getElementById("status").innerText = data.error
@@ -185,8 +184,8 @@
       }
 
     } catch (err) {
-      console.log(err)
-      alert("API error")
+      console.log("API ERROR:", err)
+      alert("API failed")
     }
   }
 
