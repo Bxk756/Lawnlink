@@ -1,66 +1,299 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>LawnLink Dashboard</title>
 
-  <!-- LOAD ONCE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LawnLink Customer Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+margin:0;
+}
+
+header{
+background:#1db954;
+color:white;
+padding:20px;
+font-size:24px;
+font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logout{
+cursor:pointer;
+font-size:16px;
+}
+
+.container{
+padding:20px;
+padding-bottom:100px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:16px;
+margin-bottom:20px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.card h2{
+margin-top:0;
+}
+
+input,
+textarea{
+width:100%;
+padding:14px;
+margin-top:12px;
+border-radius:10px;
+border:1px solid #ddd;
+font-size:16px;
+box-sizing:border-box;
+}
+
+textarea{
+min-height:120px;
+resize:none;
+}
+
+button{
+width:100%;
+padding:15px;
+margin-top:15px;
+border:none;
+background:#1db954;
+color:white;
+font-size:17px;
+font-weight:bold;
+border-radius:10px;
+cursor:pointer;
+}
+
+.job{
+padding:15px;
+border-bottom:1px solid #eee;
+}
+
+.job:last-child{
+border-bottom:none;
+}
+
+.price{
+color:#1db954;
+font-weight:bold;
+font-size:18px;
+}
+
+.empty{
+color:gray;
+text-align:center;
+padding:20px;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h2>Create Job</h2>
+<header>
 
-<input id="title" placeholder="Title"><br><br>
-<input id="price" placeholder="Price"><br><br>
-<input type="file" id="image"><br><br>
+<span>LawnLink</span>
 
-<button id="postBtn">Post Job</button>
+<span class="logout" onclick="logout()">
+Logout
+</span>
 
-<p id="status"></p>
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Create Landscaping Job</h2>
+
+<input
+id="title"
+placeholder="Example: Front Yard Mowing"
+/>
+
+<input
+id="price"
+placeholder="Budget"
+/>
+
+<textarea
+id="description"
+placeholder="Describe the work needed..."
+></textarea>
+
+<button onclick="postJob()">
+Post Job
+</button>
+
+</div>
+
+<div class="card">
+
+<h2>Your Jobs</h2>
+
+<div id="jobs">
+<div class="empty">
+Loading jobs...
+</div>
+</div>
+
+</div>
+
+</div>
 
 <script>
-console.log("🔥 FINAL VERSION LOADED")
 
-// 🔒 PREVENT DUPLICATE INIT
-if (!window._supabaseInitialized) {
+const SUPABASE_URL =
+"https://zapztkpavvtslvmjzxbh.supabase.co"
 
-  window._supabaseInitialized = true
+const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
-  const supabase = window.supabase.createClient(
-    "https://zapztkpavvtslvmjzxbh.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
-  )
+const { createClient } = supabase
 
-  async function createJob() {
-    console.log("✅ BUTTON CLICKED")
+const client =
+createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+)
 
-    const title = document.getElementById("title").value
-    const price = document.getElementById("price").value
+async function postJob(){
 
-    try {
-      const res = await fetch("/api/jobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ title, price })
-      })
+const title =
+document.getElementById("title").value
 
-      const data = await res.json()
-      console.log("📦 API RESPONSE:", data)
+const price =
+document.getElementById("price").value
 
-      document.getElementById("status").innerText = "Done"
-    } catch (err) {
-      console.error(err)
-      document.getElementById("status").innerText = "Error"
-    }
-  }
+const description =
+document.getElementById("description").value
 
-  // ✅ SAFE BUTTON BIND (NO INLINE onclick)
-  document.getElementById("postBtn").addEventListener("click", createJob)
+if(!title || !price){
+
+alert("Please complete all fields")
+return
 
 }
+
+try{
+
+const res = await fetch("/api/jobs",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+title,
+price,
+description
+})
+
+})
+
+const data = await res.json()
+
+console.log(data)
+
+alert("Job posted successfully!")
+
+loadJobs()
+
+}catch(err){
+
+console.error(err)
+
+alert("Failed to create job")
+
+}
+
+}
+
+async function loadJobs(){
+
+try{
+
+const res =
+await fetch("/api/jobs")
+
+const jobs =
+await res.json()
+
+const container =
+document.getElementById("jobs")
+
+container.innerHTML = ""
+
+if(!jobs.length){
+
+container.innerHTML = `
+<div class="empty">
+No jobs posted yet
+</div>
+`
+
+return
+
+}
+
+jobs.forEach(job=>{
+
+container.innerHTML += `
+
+<div class="job">
+
+<h3>${job.title}</h3>
+
+<p class="price">
+$${job.price}
+</p>
+
+<p>
+${job.description || ""}
+</p>
+
+</div>
+
+`
+
+})
+
+}catch(err){
+
+console.error(err)
+
+}
+
+}
+
+async function logout(){
+
+await client.auth.signOut()
+
+window.location.href="/login.html"
+
+}
+
+loadJobs()
+
 </script>
 
 </body>

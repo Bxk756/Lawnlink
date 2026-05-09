@@ -30,73 +30,166 @@ box-shadow:0 10px 30px rgba(0,0,0,.1);
 text-align:center;
 }
 
+.logo{
+width:70px;
+height:70px;
+background:#1db954;
+border-radius:20px;
+margin:auto;
+display:flex;
+align-items:center;
+justify-content:center;
+color:white;
+font-size:34px;
+margin-bottom:20px;
+}
+
+h1{
+margin:0;
+font-size:40px;
+}
+
+.subtitle{
+color:#666;
+margin-top:10px;
+margin-bottom:30px;
+}
+
 input{
 width:100%;
-padding:14px;
+padding:15px;
 margin-top:12px;
-border-radius:10px;
+border-radius:12px;
 border:1px solid #ddd;
+font-size:16px;
+box-sizing:border-box;
 }
 
 button{
 width:100%;
-padding:14px;
+padding:15px;
 margin-top:20px;
 border:none;
-background:#1a9b6b;
+background:#1db954;
 color:white;
-border-radius:10px;
-font-size:16px;
+border-radius:12px;
+font-size:18px;
+font-weight:bold;
 cursor:pointer;
 }
 
+.footer{
+margin-top:20px;
+font-size:14px;
+color:#666;
+}
+
+.footer a{
+color:#1db954;
+text-decoration:none;
+font-weight:bold;
+}
+
 </style>
+
 </head>
 
 <body>
 
 <div class="card">
 
-<h2>LawnLink Login</h2>
+<div class="logo">🌿</div>
 
-<input id="email" type="email" placeholder="Email">
+<h1>LawnLink</h1>
 
-<input id="password" type="password" placeholder="Password">
+<div class="subtitle">
+Sign into your account
+</div>
 
-<button onclick="login()">Login</button>
+<input
+id="email"
+type="email"
+placeholder="Email"
+/>
 
-<p>No account?</p>
+<input
+id="password"
+type="password"
+placeholder="Password"
+/>
 
-<a href="/signup.html">Create account</a>
+<button onclick="login()">
+Login
+</button>
+
+<div class="footer">
+No account?
+<a href="/signup.html">
+Create one
+</a>
+</div>
 
 </div>
 
 <script>
 
-const SUPABASE_URL="https://zapztkpavvtslvmjzxbh.supabase.co"
+const SUPABASE_URL =
+"https://zapztkpavvtslvmjzxbh.supabase.co"
 
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
 const { createClient } = supabase
 
-const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const client =
+createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+)
 
 async function login(){
 
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
+const email =
+document.getElementById("email").value
 
-const { error } = await client.auth.signInWithPassword({
-email:email,
-password:password
+const password =
+document.getElementById("password").value
+
+const { data, error } =
+await client.auth.signInWithPassword({
+
+email,
+password
+
 })
 
 if(error){
+
 alert(error.message)
 return
+
 }
 
-window.location.href="/dashboard.html"
+// 🚀 GET USER ROLE
+
+const role =
+data.user.user_metadata.role
+
+console.log("ROLE:", role)
+
+// 🚀 REDIRECT
+
+if(role === "pro"){
+
+window.location.href =
+"/marketplace.html"
+
+}else{
+
+window.location.href =
+"/dashboard.html"
+
+}
 
 }
 
