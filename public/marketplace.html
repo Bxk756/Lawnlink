@@ -1,247 +1,520 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>LawnLink Marketplace</title>
 
-  <!-- Mapbox -->
-  <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet" />
-  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-    }
+<title>LawnLink Marketplace</title>
 
-    header {
-      background: #1db954;
-      color: white;
-      padding: 18px;
-      font-size: 20px;
-      font-weight: bold;
-      display: flex;
-      justify-content: space-between;
-    }
+<!-- MAPBOX -->
+<link
+href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css"
+rel="stylesheet"
+/>
 
-    #map {
-      height: 250px;
-    }
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-    .container {
-      padding: 12px;
-      padding-bottom: 100px;
-    }
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    .job {
-      background: white;
-      padding: 15px;
-      border-radius: 14px;
-      margin-bottom: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      cursor: pointer;
-      transition: 0.2s;
-    }
+<style>
 
-    .job:hover {
-      transform: scale(1.02);
-    }
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+}
 
-    .job h3 {
-      margin: 0;
-      font-size: 18px;
-    }
+header{
+background:#1db954;
+color:white;
+padding:18px;
+font-size:20px;
+font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
 
-    .price {
-      font-size: 18px;
-      font-weight: bold;
-      color: #1db954;
-    }
+.logout{
+cursor:pointer;
+font-size:15px;
+}
 
-    .distance {
-      font-size: 13px;
-      color: gray;
-    }
+#map{
+height:250px;
+}
 
-    .bottom-bar {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background: white;
-      padding: 12px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-      display: none;
-    }
+.container{
+padding:12px;
+padding-bottom:120px;
+}
 
-    .bottom-bar.active {
-      display: block;
-    }
+.job{
+background:white;
+padding:16px;
+border-radius:16px;
+margin-bottom:14px;
+box-shadow:0 4px 12px rgba(0,0,0,0.08);
+cursor:pointer;
+transition:.2s;
+}
 
-    .bottom-bar h3 {
-      margin: 0;
-    }
+.job:hover{
+transform:scale(1.02);
+}
 
-    .bottom-bar button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
+.job h3{
+margin:0;
+font-size:18px;
+}
 
-    .accept {
-      background: #1db954;
-      color: white;
-    }
+.price{
+font-size:20px;
+font-weight:bold;
+color:#1db954;
+margin-top:8px;
+}
 
-    .navigate {
-      background: black;
-      color: white;
-    }
-  </style>
+.distance{
+font-size:13px;
+color:gray;
+margin-top:6px;
+}
+
+.bottom-bar{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:white;
+padding:14px;
+box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+display:none;
+z-index:999;
+}
+
+.bottom-bar.active{
+display:block;
+}
+
+.bottom-bar h3{
+margin:0;
+}
+
+.bottom-bar button{
+width:100%;
+padding:14px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.accept{
+background:#1db954;
+color:white;
+}
+
+.navigate{
+background:black;
+color:white;
+}
+
+.empty{
+text-align:center;
+padding:40px;
+color:gray;
+}
+
+</style>
+
 </head>
 
 <body>
 
 <header>
-  Jobs Near You
-  <span onclick="logout()" style="cursor:pointer;">Logout</span>
+
+<span>Jobs Near You</span>
+
+<span class="logout" onclick="logout()">
+Logout
+</span>
+
 </header>
 
 <div id="map"></div>
 
-<div class="container" id="jobs"></div>
+<div class="container" id="jobs">
 
-<!-- 🚀 Bottom Action Panel -->
+<div class="empty">
+Loading nearby jobs...
+</div>
+
+</div>
+
+<!-- 🚀 ACTION PANEL -->
+
 <div class="bottom-bar" id="bottomBar">
-  <h3 id="selectedTitle"></h3>
-  <p id="selectedPrice"></p>
 
-  <button class="accept" onclick="acceptSelected()">Accept Job</button>
-  <button class="navigate" onclick="navigateSelected()">📍 Navigate</button>
+<h3 id="selectedTitle"></h3>
+
+<p id="selectedPrice"></p>
+
+<button
+class="accept"
+onclick="acceptSelected()"
+>
+Accept Job
+</button>
+
+<button
+class="navigate"
+onclick="navigateSelected()"
+>
+📍 Navigate
+</button>
+
 </div>
 
 <script>
-  mapboxgl.accessToken = "pk.eyJ1IjoiYnhrNzU3IiwiYSI6ImNtbnFzZzhzMzBhYWgyc3EzaWRteHgzanMifQ.0SxZfEeRvKHEuSxnF4dq9A";
 
-  let userLat, userLng, map;
-  let selectedJob = null;
+// 🚀 MAPBOX
 
-  navigator.geolocation.getCurrentPosition((pos) => {
-    userLat = pos.coords.latitude;
-    userLng = pos.coords.longitude;
-    initMap();
-    loadJobs();
-  });
+mapboxgl.accessToken =
+"pk.eyJ1IjoiYnhrNzU3IiwiYSI6ImNtbnFzZzhzMzBhYWgyc3EzaWRteHgzanMifQ.0SxZfEeRvKHEuSxnF4dq9A"
 
-  function initMap() {
-    map = new mapboxgl.Map({
-      container: "map",
-      style: "mapbox://styles/mapbox/streets-v11",
-      center: [userLng, userLat],
-      zoom: 12
-    });
+// 🚀 SUPABASE
 
-    new mapboxgl.Marker({ color: "blue" })
-      .setLngLat([userLng, userLat])
-      .addTo(map);
-  }
+const SUPABASE_URL =
+"https://zapztkpavvtslvmjzxbh.supabase.co"
 
-  function getDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
+const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
-    const a =
-      Math.sin(dLat/2) ** 2 +
-      Math.cos(lat1 * Math.PI/180) *
-      Math.cos(lat2 * Math.PI/180) *
-      Math.sin(dLon/2) ** 2;
+const { createClient } = supabase
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return (R * c).toFixed(2);
-  }
+const client =
+createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+)
 
-  async function loadJobs() {
-    const res = await fetch("/api/jobs");
-    const jobs = await res.json();
+let currentUser = null
 
-    const container = document.getElementById("jobs");
-    container.innerHTML = "";
+let userLat
+let userLng
+let map
+let selectedJob = null
 
-    jobs.forEach(job => {
-      const distance = job.lat
-        ? getDistance(userLat, userLng, job.lat, job.lng)
-        : null;
+// 🚀 CHECK AUTH
 
-      const div = document.createElement("div");
-      div.className = "job";
+async function checkUser(){
 
-      div.onclick = () => selectJob(job);
+const { data } =
+await client.auth.getUser()
 
-      div.innerHTML = `
-        <h3>${job.title}</h3>
-        <p class="price">$${job.price}</p>
-        ${distance ? `<p class="distance">${distance} km away</p>` : ""}
-      `;
+if(!data.user){
 
-      container.appendChild(div);
+window.location.href =
+"/login.html"
 
-      if (job.lat && job.lng) {
-        new mapboxgl.Marker()
-          .setLngLat([job.lng, job.lat])
-          .addTo(map);
-      }
-    });
-  }
+return
 
-  // 🔥 SELECT JOB (DoorDash style)
-  function selectJob(job) {
-    selectedJob = job;
+}
 
-    document.getElementById("selectedTitle").innerText = job.title;
-    document.getElementById("selectedPrice").innerText = "$" + job.price;
+currentUser = data.user
 
-    document.getElementById("bottomBar").classList.add("active");
-  }
+console.log("USER:", currentUser.id)
 
-  function acceptSelected() {
-    if (!selectedJob) return;
-    acceptJob(selectedJob.id);
-  }
+}
 
-  function navigateSelected() {
-    if (!selectedJob) return;
-    openDirections(selectedJob.lat, selectedJob.lng);
-  }
+// 🚀 START APP
 
-  function openDirections(lat, lng) {
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+navigator.geolocation.getCurrentPosition(
 
-    if (isIOS) {
-      window.open(`http://maps.apple.com/?daddr=${lat},${lng}`, "_blank");
-    } else {
-      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, "_blank");
-    }
-  }
+async(pos)=>{
 
-  async function acceptJob(jobId) {
-    await fetch("/api/accept-job", {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ jobId, landscaperId: 1 })
-    });
+await checkUser()
 
-    alert("Job accepted!");
-    location.reload();
-  }
+userLat = pos.coords.latitude
+userLng = pos.coords.longitude
 
-  function logout() {
-    window.location.href = "/login.html";
-  }
+initMap()
+loadJobs()
+
+},
+
+(err)=>{
+
+alert("Location access required")
+
+console.error(err)
+
+}
+
+)
+
+// 🚀 INIT MAP
+
+function initMap(){
+
+map = new mapboxgl.Map({
+
+container:"map",
+
+style:"mapbox://styles/mapbox/streets-v11",
+
+center:[userLng,userLat],
+
+zoom:12
+
+})
+
+new mapboxgl.Marker({
+color:"blue"
+})
+.setLngLat([userLng,userLat])
+.addTo(map)
+
+}
+
+// 🚀 DISTANCE
+
+function getDistance(lat1, lon1, lat2, lon2){
+
+const R = 6371
+
+const dLat =
+(lat2-lat1) * Math.PI/180
+
+const dLon =
+(lon2-lon1) * Math.PI/180
+
+const a =
+Math.sin(dLat/2)**2 +
+Math.cos(lat1*Math.PI/180) *
+Math.cos(lat2*Math.PI/180) *
+Math.sin(dLon/2)**2
+
+const c =
+2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))
+
+return (R*c).toFixed(2)
+
+}
+
+// 🚀 LOAD JOBS
+
+async function loadJobs(){
+
+try{
+
+const res =
+await fetch("/api/jobs")
+
+const jobs =
+await res.json()
+
+const container =
+document.getElementById("jobs")
+
+container.innerHTML = ""
+
+const openJobs =
+jobs.filter(job => job.status === "open")
+
+if(openJobs.length === 0){
+
+container.innerHTML = `
+<div class="empty">
+No open jobs nearby
+</div>
+`
+
+return
+
+}
+
+openJobs.forEach(job=>{
+
+const distance =
+job.lat
+? getDistance(
+userLat,
+userLng,
+job.lat,
+job.lng
+)
+: null
+
+const div =
+document.createElement("div")
+
+div.className = "job"
+
+div.onclick = ()=>selectJob(job)
+
+div.innerHTML = `
+
+<h3>${job.title}</h3>
+
+<p class="price">
+$${job.price}
+</p>
+
+${distance
+? `<p class="distance">${distance} km away</p>`
+: ""}
+
+`
+
+container.appendChild(div)
+
+if(job.lat && job.lng){
+
+new mapboxgl.Marker()
+.setLngLat([job.lng,job.lat])
+.addTo(map)
+
+}
+
+})
+
+}catch(err){
+
+console.error(err)
+
+}
+
+}
+
+// 🚀 SELECT JOB
+
+function selectJob(job){
+
+selectedJob = job
+
+document.getElementById("selectedTitle")
+.innerText = job.title
+
+document.getElementById("selectedPrice")
+.innerText = "$" + job.price
+
+document.getElementById("bottomBar")
+.classList.add("active")
+
+}
+
+// 🚀 ACCEPT
+
+function acceptSelected(){
+
+if(!selectedJob)return
+
+acceptJob(selectedJob.id)
+
+}
+
+// 🚀 NAVIGATION
+
+function navigateSelected(){
+
+if(!selectedJob)return
+
+openDirections(
+selectedJob.lat,
+selectedJob.lng
+)
+
+}
+
+function openDirections(lat,lng){
+
+const isIOS =
+/iPhone|iPad|iPod/i
+.test(navigator.userAgent)
+
+if(isIOS){
+
+window.open(
+`http://maps.apple.com/?daddr=${lat},${lng}`,
+"_blank"
+)
+
+}else{
+
+window.open(
+`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`,
+"_blank"
+)
+
+}
+
+}
+
+// 🚀 ACCEPT API
+
+async function acceptJob(jobId){
+
+try{
+
+const res =
+await fetch("/api/accept-job",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+jobId,
+landscaperId: currentUser.id
+
+})
+
+})
+
+const data =
+await res.json()
+
+if(!data.success){
+
+alert(data.error || "Failed")
+return
+
+}
+
+alert("Job accepted!")
+
+location.reload()
+
+}catch(err){
+
+console.error(err)
+
+alert("Error accepting job")
+
+}
+
+}
+
+// 🚀 LOGOUT
+
+async function logout(){
+
+await client.auth.signOut()
+
+window.location.href =
+"/login.html"
+
+}
+
 </script>
 
 </body>
