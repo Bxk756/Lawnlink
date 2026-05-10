@@ -2,12 +2,16 @@
 <html lang="en">
 <head>
 
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
 <title>LawnLink Marketplace</title>
 
-<!-- MAPBOX -->
+<meta
+name="description"
+content="Find nearby landscaping jobs on LawnLink including mowing, yard cleanup, pruning, leaf removal, and outdoor services."
+>
+
 <link
 href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css"
 rel="stylesheet"
@@ -15,7 +19,6 @@ rel="stylesheet"
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -30,7 +33,7 @@ header{
 background:#1db954;
 color:white;
 padding:18px;
-font-size:20px;
+font-size:22px;
 font-weight:bold;
 display:flex;
 justify-content:space-between;
@@ -79,7 +82,7 @@ margin-top:8px;
 
 .distance{
 font-size:13px;
-color:gray;
+color:#555;
 margin-top:6px;
 }
 
@@ -124,10 +127,30 @@ background:black;
 color:white;
 }
 
+.top-actions{
+padding:12px;
+display:flex;
+gap:10px;
+}
+
+.top-actions button{
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.my-jobs{
+background:black;
+color:white;
+}
+
 .empty{
 text-align:center;
 padding:40px;
-color:gray;
+color:#555;
 }
 
 </style>
@@ -146,6 +169,19 @@ Logout
 
 </header>
 
+<main>
+
+<div class="top-actions">
+
+<button
+class="my-jobs"
+onclick="window.location.href='/my-jobs.html'"
+>
+My Jobs
+</button>
+
+</div>
+
 <div id="map"></div>
 
 <div class="container" id="jobs">
@@ -156,7 +192,7 @@ Loading nearby jobs...
 
 </div>
 
-<!-- 🚀 ACTION PANEL -->
+</main>
 
 <div class="bottom-bar" id="bottomBar">
 
@@ -182,12 +218,8 @@ onclick="navigateSelected()"
 
 <script>
 
-// 🚀 MAPBOX
-
 mapboxgl.accessToken =
 "pk.eyJ1IjoiYnhrNzU3IiwiYSI6ImNtbnFzZzhzMzBhYWgyc3EzaWRteHgzanMifQ.0SxZfEeRvKHEuSxnF4dq9A"
-
-// 🚀 SUPABASE
 
 const SUPABASE_URL =
 "https://zapztkpavvtslvmjzxbh.supabase.co"
@@ -204,13 +236,10 @@ SUPABASE_ANON_KEY
 )
 
 let currentUser = null
-
 let userLat
 let userLng
 let map
 let selectedJob = null
-
-// 🚀 CHECK AUTH
 
 async function checkUser(){
 
@@ -219,20 +248,16 @@ await client.auth.getUser()
 
 if(!data.user){
 
-window.location.href =
-"/login.html"
-
+window.location.href="/login.html"
 return
 
 }
 
 currentUser = data.user
 
-console.log("USER:", currentUser.id)
+console.log("LANDSCAPER:", currentUser.id)
 
 }
-
-// 🚀 START APP
 
 navigator.geolocation.getCurrentPosition(
 
@@ -251,25 +276,19 @@ loadJobs()
 (err)=>{
 
 alert("Location access required")
-
 console.error(err)
 
 }
 
 )
 
-// 🚀 INIT MAP
-
 function initMap(){
 
 map = new mapboxgl.Map({
 
 container:"map",
-
 style:"mapbox://styles/mapbox/streets-v11",
-
 center:[userLng,userLat],
-
 zoom:12
 
 })
@@ -281,8 +300,6 @@ color:"blue"
 .addTo(map)
 
 }
-
-// 🚀 DISTANCE
 
 function getDistance(lat1, lon1, lat2, lon2){
 
@@ -307,8 +324,6 @@ return (R*c).toFixed(2)
 
 }
 
-// 🚀 LOAD JOBS
-
 async function loadJobs(){
 
 try{
@@ -325,7 +340,9 @@ document.getElementById("jobs")
 container.innerHTML = ""
 
 const openJobs =
-jobs.filter(job => job.status === "open")
+jobs.filter(
+job => job.status === "open"
+)
 
 if(openJobs.length === 0){
 
@@ -392,8 +409,6 @@ console.error(err)
 
 }
 
-// 🚀 SELECT JOB
-
 function selectJob(job){
 
 selectedJob = job
@@ -409,8 +424,6 @@ document.getElementById("bottomBar")
 
 }
 
-// 🚀 ACCEPT
-
 function acceptSelected(){
 
 if(!selectedJob)return
@@ -418,8 +431,6 @@ if(!selectedJob)return
 acceptJob(selectedJob.id)
 
 }
-
-// 🚀 NAVIGATION
 
 function navigateSelected(){
 
@@ -456,8 +467,6 @@ window.open(
 
 }
 
-// 🚀 ACCEPT API
-
 async function acceptJob(jobId){
 
 try{
@@ -492,7 +501,8 @@ return
 
 alert("Job accepted!")
 
-location.reload()
+window.location.href =
+"/my-jobs.html"
 
 }catch(err){
 
@@ -503,8 +513,6 @@ alert("Error accepting job")
 }
 
 }
-
-// 🚀 LOGOUT
 
 async function logout(){
 
