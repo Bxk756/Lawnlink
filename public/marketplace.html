@@ -9,7 +9,7 @@
 
 <meta
 name="description"
-content="Find nearby landscaping jobs on LawnLink including mowing, yard cleanup, pruning, leaf removal, and outdoor services."
+content="Find nearby landscaping jobs on LawnLink."
 >
 
 <link
@@ -40,11 +40,6 @@ justify-content:space-between;
 align-items:center;
 }
 
-.logout{
-cursor:pointer;
-font-size:15px;
-}
-
 #map{
 height:250px;
 }
@@ -59,31 +54,19 @@ background:white;
 padding:16px;
 border-radius:16px;
 margin-bottom:14px;
-box-shadow:0 4px 12px rgba(0,0,0,0.08);
+box-shadow:0 4px 12px rgba(0,0,0,.08);
 cursor:pointer;
-transition:.2s;
-}
-
-.job:hover{
-transform:scale(1.02);
-}
-
-.job h3{
-margin:0;
-font-size:18px;
 }
 
 .price{
 font-size:20px;
 font-weight:bold;
 color:#1db954;
-margin-top:8px;
 }
 
 .distance{
 font-size:13px;
 color:#555;
-margin-top:6px;
 }
 
 .bottom-bar{
@@ -93,17 +76,13 @@ left:0;
 right:0;
 background:white;
 padding:14px;
-box-shadow:0 -2px 10px rgba(0,0,0,0.1);
+box-shadow:0 -2px 10px rgba(0,0,0,.1);
 display:none;
 z-index:999;
 }
 
 .bottom-bar.active{
 display:block;
-}
-
-.bottom-bar h3{
-margin:0;
 }
 
 .bottom-bar button{
@@ -127,26 +106,6 @@ background:black;
 color:white;
 }
 
-.top-actions{
-padding:12px;
-display:flex;
-gap:10px;
-}
-
-.top-actions button{
-flex:1;
-padding:12px;
-border:none;
-border-radius:10px;
-font-weight:bold;
-cursor:pointer;
-}
-
-.my-jobs{
-background:black;
-color:white;
-}
-
 .empty{
 text-align:center;
 padding:40px;
@@ -163,7 +122,7 @@ color:#555;
 
 <span>Jobs Near You</span>
 
-<span class="logout" onclick="logout()">
+<span onclick="logout()" style="cursor:pointer;">
 Logout
 </span>
 
@@ -171,23 +130,12 @@ Logout
 
 <main>
 
-<div class="top-actions">
-
-<button
-class="my-jobs"
-onclick="window.location.href='/my-jobs.html'"
->
-My Jobs
-</button>
-
-</div>
-
 <div id="map"></div>
 
 <div class="container" id="jobs">
 
 <div class="empty">
-Loading nearby jobs...
+Loading jobs...
 </div>
 
 </div>
@@ -225,7 +173,7 @@ const SUPABASE_URL =
 "https://zapztkpavvtslvmjzxbh.supabase.co"
 
 const SUPABASE_ANON_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+"YOUR_ANON_KEY"
 
 const { createClient } = supabase
 
@@ -255,8 +203,6 @@ return
 
 currentUser = data.user
 
-console.log("LANDSCAPER:", currentUser.id)
-
 }
 
 navigator.geolocation.getCurrentPosition(
@@ -270,13 +216,7 @@ userLng = pos.coords.longitude
 
 initMap()
 loadJobs()
-
-},
-
-(err)=>{
-
-alert("Location access required")
-console.error(err)
+setupRealtime()
 
 }
 
@@ -325,8 +265,6 @@ return (R*c).toFixed(2)
 }
 
 async function loadJobs(){
-
-try{
 
 const res =
 await fetch("/api/jobs")
@@ -391,21 +329,34 @@ ${distance
 
 container.appendChild(div)
 
-if(job.lat && job.lng){
-
-new mapboxgl.Marker()
-.setLngLat([job.lng,job.lat])
-.addTo(map)
-
-}
-
 })
 
-}catch(err){
+}
 
-console.error(err)
+// 🚀 REALTIME
+
+function setupRealtime(){
+
+client
+.channel("jobs-realtime")
+
+.on(
+"postgres_changes",
+{
+event:"*",
+schema:"public",
+table:"jobs"
+},
+(payload)=>{
+
+console.log("REALTIME:", payload)
+
+loadJobs()
 
 }
+)
+
+.subscribe()
 
 }
 
@@ -469,8 +420,6 @@ window.open(
 
 async function acceptJob(jobId){
 
-try{
-
 const res =
 await fetch("/api/accept-job",{
 
@@ -501,16 +450,7 @@ return
 
 alert("Job accepted!")
 
-window.location.href =
-"/my-jobs.html"
-
-}catch(err){
-
-console.error(err)
-
-alert("Error accepting job")
-
-}
+window.location.href="/my-jobs.html"
 
 }
 
@@ -518,8 +458,7 @@ async function logout(){
 
 await client.auth.signOut()
 
-window.location.href =
-"/login.html"
+window.location.href="/login.html"
 
 }
 
