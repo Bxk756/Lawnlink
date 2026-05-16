@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LawnLink Notifications</title>
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+<style>
+
+body{
+font-family:system-ui;
+background:#f4f6f8;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.card{
+background:white;
+padding:40px;
+border-radius:20px;
+width:380px;
+text-align:center;
+box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+.logo{
+width:80px;
+height:80px;
+background:#16a34a;
+border-radius:20px;
+display:flex;
+justify-content:center;
+align-items:center;
+margin:auto;
+font-size:40px;
+color:white;
+}
+
+h1{
+margin-top:20px;
+margin-bottom:10px;
+font-size:32px;
+color:#111827;
+}
+
+p{
+color:#6b7280;
+line-height:1.6;
+font-size:15px;
+}
+
+button{
+width:100%;
+padding:16px;
+margin-top:25px;
+border:none;
+border-radius:12px;
+background:#16a34a;
+color:white;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+transition:.2s;
+}
+
+button:hover{
+transform:scale(1.02);
+}
+
+.status{
+margin-top:20px;
+font-size:14px;
+color:#6b7280;
+}
+
+.success{
+color:#16a34a;
+font-weight:bold;
+}
+
+.features{
+margin-top:20px;
+text-align:left;
+background:#f9fafb;
+padding:18px;
+border-radius:14px;
+}
+
+.features div{
+margin-bottom:10px;
+font-size:15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<div class="logo">
+🔔
+</div>
+
+<h1>LawnLink Alerts</h1>
+
+<p>
+Enable real-time LawnLink notifications.
+</p>
+
+<div class="features">
+
+<div>✅ New landscaping jobs</div>
+
+<div>✅ Job accepted alerts</div>
+
+<div>✅ Landscaper arrival updates</div>
+
+<div>✅ Completed job notifications</div>
+
+<div>✅ Payment confirmations</div>
+
+</div>
+
+<button onclick="enableNotifications()">
+Enable Notifications
+</button>
+
+<div class="status" id="status">
+Waiting for permission...
+</div>
+
+</div>
+
+<script>
+
+window.OneSignalDeferred = window.OneSignalDeferred || []
+
+OneSignalDeferred.push(async function(OneSignal) {
+
+await OneSignal.init({
+
+appId: "e429c488-8d4a-4e24-9bae-baef93cc1b32",
+
+notifyButton: {
+enable: true
+}
+
+})
+
+})
+
+async function enableNotifications(){
+
+try{
+
+const permission = await Notification.requestPermission()
+
+if(permission === "granted"){
+
+document.getElementById("status").innerHTML =
+'<span class="success">✅ Notifications enabled successfully</span>'
+
+}else{
+
+document.getElementById("status").innerText =
+"❌ Notifications denied"
+
+}
+
+}catch(err){
+
+console.error(err)
+
+document.getElementById("status").innerText =
+"Error enabling notifications"
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
