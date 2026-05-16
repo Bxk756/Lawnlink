@@ -5,7 +5,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>LawnLink Chat</title>
+<title>LawnLink Job Chat</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -29,19 +29,19 @@ flex-direction:column;
 background:#39d353;
 color:white;
 padding:20px;
-font-size:32px;
+font-size:28px;
 font-weight:700;
 text-align:center;
 box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
-.status{
-text-align:center;
-padding:10px;
-font-size:14px;
-color:#666;
+.jobBar{
 background:white;
-border-bottom:1px solid #eee;
+padding:12px;
+text-align:center;
+font-size:15px;
+border-bottom:1px solid #ddd;
+color:#555;
 }
 
 #messages{
@@ -108,11 +108,11 @@ opacity:.9;
 <body>
 
 <div class="header">
-💬 LawnLink Chat
+💬 LawnLink Job Chat
 </div>
 
-<div class="status">
-Live messaging connected
+<div class="jobBar" id="jobInfo">
+Loading job room...
 </div>
 
 <div id="messages"></div>
@@ -138,9 +138,37 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
-const client = window.supabase.createClient(
+const client =
+window.supabase.createClient(
 SUPABASE_URL,
 SUPABASE_ANON_KEY
+)
+
+const params =
+new URLSearchParams(window.location.search)
+
+const jobId =
+params.get("job")
+
+if(!jobId){
+
+alert("Missing job ID")
+
+throw new Error("No job ID")
+
+}
+
+document.getElementById("jobInfo").innerText =
+"Private room for Job #" + jobId
+
+const username =
+localStorage.getItem("chatUser")
+||
+("User-" + Math.floor(Math.random()*9999))
+
+localStorage.setItem(
+"chatUser",
+username
 )
 
 const messagesDiv =
@@ -152,12 +180,10 @@ document.getElementById("messageInput")
 const sendBtn =
 document.getElementById("sendBtn")
 
-const username =
-"User-" + Math.floor(Math.random() * 9999)
-
 function addMessage(message,isMine=false){
 
-const div=document.createElement("div")
+const div =
+document.createElement("div")
 
 div.className =
 isMine
@@ -182,6 +208,7 @@ const { data,error } =
 await client
 .from("messages")
 .select("*")
+.eq("job_id",jobId)
 .order("created_at",{ ascending:true })
 
 if(error){
@@ -204,7 +231,8 @@ msg.username === username
 
 async function sendMessage(){
 
-const text = input.value.trim()
+const text =
+input.value.trim()
 
 if(!text) return
 
@@ -213,15 +241,20 @@ await client
 .from("messages")
 .insert([
 {
+job_id:jobId,
 username:username,
 text:text
 }
 ])
 
 if(error){
+
 console.error(error)
+
 alert(error.message)
+
 return
+
 }
 
 input.value=""
@@ -236,14 +269,17 @@ sendMessage
 input.addEventListener(
 "keypress",
 (e)=>{
+
 if(e.key==="Enter"){
+
 sendMessage()
+
 }
-}
-)
+
+})
 
 client
-.channel("chat-room")
+.channel("job-chat-" + jobId)
 .on(
 "postgres_changes",
 {
@@ -252,6 +288,11 @@ schema:"public",
 table:"messages"
 },
 (payload)=>{
+
+if(
+String(payload.new.job_id)
+!== String(jobId)
+) return
 
 addMessage(
 payload.new,
