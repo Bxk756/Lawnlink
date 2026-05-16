@@ -17,6 +17,7 @@ body{
 margin:0;
 font-family:system-ui;
 background:#f4f6f8;
+overflow:hidden;
 }
 
 header{
@@ -40,15 +41,38 @@ left:20px;
 right:20px;
 background:white;
 padding:20px;
-border-radius:16px;
+border-radius:18px;
 box-shadow:0 10px 30px rgba(0,0,0,.15);
 z-index:10;
 }
 
+.title{
+font-size:24px;
+font-weight:bold;
+}
+
 .status{
-font-size:14px;
-color:gray;
-margin-top:5px;
+margin-top:8px;
+color:#666;
+font-size:15px;
+}
+
+.eta{
+margin-top:15px;
+font-size:32px;
+font-weight:bold;
+color:#16a34a;
+}
+
+.badge{
+display:inline-block;
+padding:6px 12px;
+background:#dcfce7;
+color:#166534;
+border-radius:999px;
+font-size:13px;
+margin-top:12px;
+font-weight:bold;
 }
 
 </style>
@@ -65,10 +89,20 @@ Live Landscaper Tracking
 
 <div class="info">
 
-<h2 id="title">Landscaper En Route</h2>
+<div class="title">
+Landscaper En Route
+</div>
+
+<div class="badge">
+LIVE GPS ACTIVE
+</div>
+
+<div class="eta" id="eta">
+Calculating...
+</div>
 
 <div class="status" id="status">
-Connecting...
+Connecting to landscaper...
 </div>
 
 </div>
@@ -80,6 +114,12 @@ mapboxgl.accessToken =
 
 const landscaperId = 1
 
+let customerLat = null
+let customerLng = null
+
+let landscaperMarker = null
+let customerMarker = null
+
 const map = new mapboxgl.Map({
 container:"map",
 style:"mapbox://styles/mapbox/streets-v11",
@@ -87,11 +127,25 @@ center:[-76.2859,36.8508],
 zoom:12
 })
 
-let marker = new mapboxgl.Marker({
-color:"#16a34a"
+navigator.geolocation.getCurrentPosition((position)=>{
+
+customerLat = position.coords.latitude
+customerLng = position.coords.longitude
+
+customerMarker = new mapboxgl.Marker({
+color:"#2563eb"
 })
-.setLngLat([-76.2859,36.8508])
+.setLngLat([customerLng,customerLat])
 .addTo(map)
+
+map.flyTo({
+center:[customerLng,customerLat],
+zoom:13
+})
+
+loadLocation()
+
+})
 
 async function loadLocation(){
 
@@ -105,15 +159,29 @@ const data = await res.json()
 
 if(data.lat && data.lng){
 
-marker.setLngLat([data.lng,data.lat])
+if(!landscaperMarker){
 
-map.flyTo({
-center:[data.lng,data.lat],
-zoom:14
+landscaperMarker = new mapboxgl.Marker({
+color:"#16a34a"
 })
+.setLngLat([data.lng,data.lat])
+.addTo(map)
+
+}else{
+
+landscaperMarker.setLngLat([data.lng,data.lat])
+
+}
+
+drawRoute(
+data.lng,
+data.lat,
+customerLng,
+customerLat
+)
 
 document.getElementById("status").innerText =
-"Live location updated"
+"Landscaper is heading to your location"
 
 }
 
@@ -122,6 +190,63 @@ document.getElementById("status").innerText =
 console.error(err)
 
 }
+
+}
+
+async function drawRoute(startLng,startLat,endLng,endLat){
+
+const query = await fetch(
+`https://api.mapbox.com/directions/v5/mapbox/driving/${startLng},${startLat};${endLng},${endLat}?geometries=geojson&access_token=${mapboxgl.accessToken}`
+)
+
+const json = await query.json()
+
+const route = json.routes[0]
+
+const etaMinutes = Math.ceil(route.duration / 60)
+
+document.getElementById("eta").innerText =
+etaMinutes + " min away"
+
+const geojson = {
+type:"Feature",
+properties:{},
+geometry:route.geometry
+}
+
+if(map.getSource("route")){
+
+map.getSource("route").setData(geojson)
+
+}else{
+
+map.addLayer({
+id:"route",
+type:"line",
+source:{
+type:"geojson",
+data:geojson
+},
+layout:{
+"line-join":"round",
+"line-cap":"round"
+},
+paint:{
+"line-color":"#2563eb",
+"line-width":6
+}
+})
+
+}
+
+const bounds = new mapboxgl.LngLatBounds()
+
+bounds.extend([startLng,startLat])
+bounds.extend([endLng,endLat])
+
+map.fitBounds(bounds,{
+padding:100
+})
 
 }
 
