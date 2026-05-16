@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LawnLink Live Tracking</title>
+
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet"/>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:system-ui;
+background:#f4f6f8;
+}
+
+header{
+background:#16a34a;
+color:white;
+padding:18px;
+font-size:22px;
+font-weight:bold;
+text-align:center;
+}
+
+#map{
+height:100vh;
+width:100%;
+}
+
+.info{
+position:fixed;
+bottom:20px;
+left:20px;
+right:20px;
+background:white;
+padding:20px;
+border-radius:16px;
+box-shadow:0 10px 30px rgba(0,0,0,.15);
+z-index:10;
+}
+
+.status{
+font-size:14px;
+color:gray;
+margin-top:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+Live Landscaper Tracking
+</header>
+
+<div id="map"></div>
+
+<div class="info">
+
+<h2 id="title">Landscaper En Route</h2>
+
+<div class="status" id="status">
+Connecting...
+</div>
+
+</div>
+
+<script>
+
+mapboxgl.accessToken =
+"pk.eyJ1IjoiYnhrNzU3IiwiYSI6ImNtbnFzZzhzMzBhYWgyc3EzaWRteHgzanMifQ.0SxZfEeRvKHEuSxnF4dq9A"
+
+const landscaperId = 1
+
+const map = new mapboxgl.Map({
+container:"map",
+style:"mapbox://styles/mapbox/streets-v11",
+center:[-76.2859,36.8508],
+zoom:12
+})
+
+let marker = new mapboxgl.Marker({
+color:"#16a34a"
+})
+.setLngLat([-76.2859,36.8508])
+.addTo(map)
+
+async function loadLocation(){
+
+try{
+
+const res = await fetch(
+`/api/get-location?landscaper_id=${landscaperId}`
+)
+
+const data = await res.json()
+
+if(data.lat && data.lng){
+
+marker.setLngLat([data.lng,data.lat])
+
+map.flyTo({
+center:[data.lng,data.lat],
+zoom:14
+})
+
+document.getElementById("status").innerText =
+"Live location updated"
+
+}
+
+}catch(err){
+
+console.error(err)
+
+}
+
+}
+
+setInterval(loadLocation,3000)
+
+</script>
+
+</body>
+</html>
