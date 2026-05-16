@@ -2,32 +2,46 @@
 <html lang="en">
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>LawnLink Live Chat</title>
+<title>LawnLink Chat</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 
-body{
+*{
 margin:0;
-font-family:system-ui;
-background:#f4f6f8;
-display:flex;
-flex-direction:column;
-height:100vh;
+padding:0;
+box-sizing:border-box;
 }
 
-header{
-background:#16a34a;
+body{
+font-family:system-ui;
+background:#f4f4f4;
+height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+.header{
+background:#39d353;
 color:white;
-padding:18px;
-font-size:22px;
-font-weight:bold;
+padding:20px;
+font-size:32px;
+font-weight:700;
 text-align:center;
-box-shadow:0 2px 10px rgba(0,0,0,.1);
+box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+
+.status{
+text-align:center;
+padding:10px;
+font-size:14px;
+color:#666;
+background:white;
+border-bottom:1px solid #eee;
 }
 
 #messages{
@@ -40,63 +54,51 @@ gap:12px;
 }
 
 .message{
-max-width:75%;
+background:white;
 padding:14px;
-border-radius:18px;
-font-size:15px;
-line-height:1.5;
+border-radius:14px;
+max-width:80%;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+font-size:16px;
 word-wrap:break-word;
-box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
 
-.sent{
+.mine{
 align-self:flex-end;
-background:#16a34a;
+background:#39d353;
 color:white;
-border-bottom-right-radius:6px;
 }
 
-.received{
-align-self:flex-start;
-background:white;
-color:#111827;
-border-bottom-left-radius:6px;
-}
-
-.footer{
+.bottom{
 display:flex;
-padding:15px;
+padding:16px;
 background:white;
-border-top:1px solid #e5e7eb;
+border-top:1px solid #ddd;
 gap:10px;
 }
 
 input{
 flex:1;
-padding:14px;
-border-radius:12px;
-border:1px solid #d1d5db;
+padding:16px;
+border-radius:14px;
+border:1px solid #ccc;
 font-size:16px;
 outline:none;
 }
 
 button{
-padding:14px 20px;
+padding:16px 22px;
 border:none;
-background:#16a34a;
+border-radius:14px;
+background:#39d353;
 color:white;
-border-radius:12px;
 font-size:16px;
-font-weight:bold;
+font-weight:700;
 cursor:pointer;
 }
 
-.status{
-text-align:center;
-padding:10px;
-font-size:13px;
-color:#6b7280;
-background:#f9fafb;
+button:hover{
+opacity:.9;
 }
 
 </style>
@@ -105,9 +107,9 @@ background:#f9fafb;
 
 <body>
 
-<header>
+<div class="header">
 💬 LawnLink Chat
-</header>
+</div>
 
 <div class="status">
 Live messaging connected
@@ -115,15 +117,14 @@ Live messaging connected
 
 <div id="messages"></div>
 
-<div class="footer">
+<div class="bottom">
 
 <input
 id="messageInput"
 placeholder="Type a message..."
-autocomplete="off"
 />
 
-<button onclick="sendMessage()">
+<button id="sendBtn">
 Send
 </button>
 
@@ -137,7 +138,7 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
-const supabase = window.supabase.createClient(
+const client = window.supabase.createClient(
 SUPABASE_URL,
 SUPABASE_ANON_KEY
 )
@@ -145,88 +146,103 @@ SUPABASE_ANON_KEY
 const messagesDiv =
 document.getElementById("messages")
 
-const currentUser = "customer"
-
-async function loadMessages(){
-
-const { data, error } = await supabase
-.from("messages")
-.select("*")
-.order("created_at",{ ascending:true })
-
-if(error){
-
-console.error(error)
-
-return
-
-}
-
-messagesDiv.innerHTML = ""
-
-data.forEach(msg=>{
-
-addMessage(msg)
-
-})
-
-scrollBottom()
-
-}
-
-function addMessage(msg){
-
-const div = document.createElement("div")
-
-div.className =
-msg.sender === currentUser
-? "message sent"
-: "message received"
-
-div.innerText = msg.message
-
-messagesDiv.appendChild(div)
-
-}
-
-async function sendMessage(){
-
 const input =
 document.getElementById("messageInput")
 
-const text = input.value.trim()
+const sendBtn =
+document.getElementById("sendBtn")
 
-if(!text) return
+const username =
+"User-" + Math.floor(Math.random() * 9999)
 
-const { error } = await supabase
-.from("messages")
-.insert([
-{
-sender: currentUser,
-message: text
-}
-])
+function addMessage(message,isMine=false){
 
-if(error){
+const div=document.createElement("div")
 
-console.error(error)
+div.className =
+isMine
+? "message mine"
+: "message"
 
-return
+div.innerHTML = `
+<strong>${message.username}</strong><br>
+${message.text}
+`
 
-}
-
-input.value = ""
-
-}
-
-function scrollBottom(){
+messagesDiv.appendChild(div)
 
 messagesDiv.scrollTop =
 messagesDiv.scrollHeight
 
 }
 
-supabase
+async function loadMessages(){
+
+const { data,error } =
+await client
+.from("messages")
+.select("*")
+.order("created_at",{ ascending:true })
+
+if(error){
+console.error(error)
+return
+}
+
+messagesDiv.innerHTML = ""
+
+data.forEach(msg => {
+
+addMessage(
+msg,
+msg.username === username
+)
+
+})
+
+}
+
+async function sendMessage(){
+
+const text = input.value.trim()
+
+if(!text) return
+
+const { error } =
+await client
+.from("messages")
+.insert([
+{
+username:username,
+text:text
+}
+])
+
+if(error){
+console.error(error)
+alert(error.message)
+return
+}
+
+input.value=""
+
+}
+
+sendBtn.addEventListener(
+"click",
+sendMessage
+)
+
+input.addEventListener(
+"keypress",
+(e)=>{
+if(e.key==="Enter"){
+sendMessage()
+}
+}
+)
+
+client
 .channel("chat-room")
 .on(
 "postgres_changes",
@@ -237,9 +253,10 @@ table:"messages"
 },
 (payload)=>{
 
-addMessage(payload.new)
-
-scrollBottom()
+addMessage(
+payload.new,
+payload.new.username === username
+)
 
 }
 )
