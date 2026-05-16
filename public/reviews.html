@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>LawnLink Reviews</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+}
+
+header{
+background:#1db954;
+color:white;
+padding:18px;
+font-size:22px;
+font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.container{
+padding:16px;
+padding-bottom:100px;
+}
+
+.card{
+background:white;
+padding:18px;
+border-radius:16px;
+margin-bottom:14px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+.rating{
+font-size:28px;
+font-weight:bold;
+color:#f59e0b;
+}
+
+.comment{
+margin-top:10px;
+line-height:1.5;
+}
+
+.empty{
+text-align:center;
+padding:40px;
+color:#555;
+}
+
+.stats{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+margin-bottom:16px;
+}
+
+.stat-card{
+background:white;
+padding:20px;
+border-radius:16px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+text-align:center;
+}
+
+.big{
+font-size:34px;
+font-weight:bold;
+color:#1db954;
+}
+
+.label{
+color:#666;
+margin-top:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<span>Reviews</span>
+
+<span onclick="logout()" style="cursor:pointer;">
+Logout
+</span>
+
+</header>
+
+<div class="container">
+
+<div class="stats">
+
+<div class="stat-card">
+
+<div class="big" id="avgRating">
+0
+</div>
+
+<div class="label">
+Average Rating
+</div>
+
+</div>
+
+<div class="stat-card">
+
+<div class="big" id="totalReviews">
+0
+</div>
+
+<div class="label">
+Total Reviews
+</div>
+
+</div>
+
+</div>
+
+<div id="reviews">
+
+<div class="empty">
+Loading reviews...
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL =
+"https://zapztkpavvtslvmjzxbh.supabase.co"
+
+const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+
+const { createClient } = supabase
+
+const client =
+createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+)
+
+let currentUser = null
+
+async function checkUser(){
+
+const { data } =
+await client.auth.getUser()
+
+if(!data.user){
+
+window.location.href="/login.html"
+return
+
+}
+
+currentUser = data.user
+
+loadReviews()
+
+}
+
+async function loadReviews(){
+
+try{
+
+const res =
+await fetch(
+`/api/reviews?landscaperId=${currentUser.id}`
+)
+
+const reviews =
+await res.json()
+
+const container =
+document.getElementById("reviews")
+
+container.innerHTML = ""
+
+if(reviews.length === 0){
+
+container.innerHTML = `
+<div class="empty">
+No reviews yet
+</div>
+`
+
+document.getElementById("avgRating")
+.innerText = "0"
+
+document.getElementById("totalReviews")
+.innerText = "0"
+
+return
+
+}
+
+const total =
+reviews.reduce(
+(sum, review)=>
+sum + Number(review.rating),
+0
+)
+
+const avg =
+(total / reviews.length).toFixed(1)
+
+document.getElementById("avgRating")
+.innerText = avg
+
+document.getElementById("totalReviews")
+.innerText = reviews.length
+
+reviews.forEach(review=>{
+
+container.innerHTML += `
+
+<div class="card">
+
+<div class="rating">
+⭐ ${review.rating}/5
+</div>
+
+<div class="comment">
+${review.comment || "No comment"}
+</div>
+
+</div>
+
+`
+
+})
+
+}catch(err){
+
+console.error(err)
+
+}
+
+}
+
+async function logout(){
+
+await client.auth.signOut()
+
+window.location.href="/login.html"
+
+}
+
+checkUser()
+
+</script>
+
+</body>
+</html>
