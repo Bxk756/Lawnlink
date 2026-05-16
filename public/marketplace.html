@@ -56,6 +56,11 @@ border-radius:16px;
 margin-bottom:14px;
 box-shadow:0 4px 12px rgba(0,0,0,.08);
 cursor:pointer;
+transition:.2s;
+}
+
+.job:hover{
+transform:scale(1.02);
 }
 
 .price{
@@ -67,6 +72,25 @@ color:#1db954;
 .distance{
 font-size:13px;
 color:#555;
+}
+
+.status{
+display:inline-block;
+padding:6px 10px;
+border-radius:20px;
+font-size:12px;
+font-weight:bold;
+margin-top:10px;
+}
+
+.open{
+background:#e8fff1;
+color:#1db954;
+}
+
+.accepted{
+background:#fff4d8;
+color:#b88400;
 }
 
 .bottom-bar{
@@ -112,6 +136,23 @@ padding:40px;
 color:#555;
 }
 
+.top-actions{
+display:flex;
+gap:10px;
+margin-bottom:14px;
+}
+
+.top-actions button{
+flex:1;
+padding:12px;
+border:none;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+background:white;
+box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+
 </style>
 
 </head>
@@ -132,10 +173,26 @@ Logout
 
 <div id="map"></div>
 
-<div class="container" id="jobs">
+<div class="container">
+
+<div class="top-actions">
+
+<button onclick="window.location.href='/my-jobs.html'">
+My Jobs
+</button>
+
+<button onclick="window.location.href='/earnings.html'">
+Earnings
+</button>
+
+</div>
+
+<div id="jobs">
 
 <div class="empty">
 Loading jobs...
+</div>
+
 </div>
 
 </div>
@@ -173,7 +230,7 @@ const SUPABASE_URL =
 "https://zapztkpavvtslvmjzxbh.supabase.co"
 
 const SUPABASE_ANON_KEY =
-"YOUR_ANON_KEY"
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
 
 const { createClient } = supabase
 
@@ -325,15 +382,25 @@ ${distance
 ? `<p class="distance">${distance} km away</p>`
 : ""}
 
+<div class="status open">
+OPEN
+</div>
+
 `
 
 container.appendChild(div)
 
-})
+if(job.lat && job.lng){
+
+new mapboxgl.Marker()
+.setLngLat([job.lng,job.lat])
+.addTo(map)
 
 }
 
-// 🚀 REALTIME
+})
+
+}
 
 function setupRealtime(){
 

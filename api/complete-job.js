@@ -15,11 +15,11 @@ export default async function handler(req, res) {
 
   try {
 
-    const { jobId, landscaperId } = req.body;
+    const { jobId } = req.body;
 
-    if (!jobId || !landscaperId) {
+    if (!jobId) {
       return res.status(400).json({
-        error: "Missing required fields"
+        error: "Missing jobId"
       });
     }
 
@@ -30,19 +30,11 @@ export default async function handler(req, res) {
         completed_at: new Date().toISOString()
       })
       .eq("id", jobId)
-      .eq("landscaper_id", landscaperId)
-      .eq("status", "in_progress")
       .select();
 
     if (error) {
       return res.status(500).json({
         error: error.message
-      });
-    }
-
-    if (!data || data.length === 0) {
-      return res.status(400).json({
-        error: "Unable to complete job"
       });
     }
 
