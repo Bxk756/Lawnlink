@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>LawnLink Upload Proof</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+}
+
+header{
+background:#1db954;
+color:white;
+padding:18px;
+font-size:22px;
+font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.container{
+padding:16px;
+padding-bottom:120px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:16px;
+box-shadow:0 4px 12px rgba(0,0,0,.08);
+}
+
+input[type="file"]{
+margin-top:20px;
+width:100%;
+}
+
+button{
+width:100%;
+padding:15px;
+margin-top:20px;
+border:none;
+background:#1db954;
+color:white;
+font-size:16px;
+font-weight:bold;
+border-radius:10px;
+cursor:pointer;
+}
+
+.preview{
+width:100%;
+margin-top:20px;
+border-radius:12px;
+display:none;
+}
+
+.status{
+margin-top:20px;
+font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<span>Upload Proof</span>
+
+<span
+onclick="window.location.href='/my-jobs.html'"
+style="cursor:pointer;"
+>
+Back
+</span>
+
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Upload Completion Photo</h2>
+
+<input
+type="file"
+id="photo"
+accept="image/*"
+/>
+
+<img
+id="preview"
+class="preview"
+/>
+
+<button onclick="uploadPhoto()">
+Upload Proof
+</button>
+
+<div class="status" id="status"></div>
+
+</div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL =
+"https://zapztkpavvtslvmjzxbh.supabase.co"
+
+const SUPABASE_ANON_KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+
+const { createClient } = supabase
+
+const client =
+createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+)
+
+const params =
+new URLSearchParams(window.location.search)
+
+const jobId =
+params.get("jobId")
+
+document
+.getElementById("photo")
+.addEventListener("change",(e)=>{
+
+const file =
+e.target.files[0]
+
+if(!file)return
+
+const reader =
+new FileReader()
+
+reader.onload = (event)=>{
+
+const preview =
+document.getElementById("preview")
+
+preview.src =
+event.target.result
+
+preview.style.display =
+"block"
+
+}
+
+reader.readAsDataURL(file)
+
+})
+
+async function uploadPhoto(){
+
+const file =
+document.getElementById("photo")
+.files[0]
+
+if(!file){
+
+alert("Please select a photo")
+return
+
+}
+
+document.getElementById("status")
+.innerText =
+"Uploading..."
+
+const fileName =
+`${Date.now()}-${file.name}`
+
+const { data, error } =
+await client.storage
+.from("job-images")
+.upload(fileName, file)
+
+if(error){
+
+console.error(error)
+
+document.getElementById("status")
+.innerText =
+"Upload failed"
+
+return
+
+}
+
+const { data: publicUrlData } =
+client.storage
+.from("job-images")
+.getPublicUrl(fileName)
+
+const photoUrl =
+publicUrlData.publicUrl
+
+const res =
+await fetch("/api/complete-job",{
+
+method:"POST",
+
+headers:{
+"Content-Type":"application/json"
+},
+
+body:JSON.stringify({
+
+jobId,
+photo_url: photoUrl
+
+})
+
+})
+
+const result =
+await res.json()
+
+if(!result.success){
+
+document.getElementById("status")
+.innerText =
+"Failed to save proof"
+
+return
+
+}
+
+document.getElementById("status")
+.innerText =
+"Proof uploaded successfully!"
+
+setTimeout(()=>{
+
+window.location.href =
+"/my-jobs.html"
+
+},1500)
+
+}
+
+</script>
+
+</body>
+</html>
