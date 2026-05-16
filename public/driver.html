@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LawnLink Driver Mode</title>
+
+<style>
+
+body{
+font-family:system-ui;
+background:#16a34a;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+text-align:center;
+padding:20px;
+}
+
+.card{
+background:white;
+color:black;
+padding:40px;
+border-radius:20px;
+max-width:400px;
+width:100%;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+h1{
+margin-top:0;
+}
+
+button{
+width:100%;
+padding:18px;
+border:none;
+border-radius:12px;
+background:#16a34a;
+color:white;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+margin-top:20px;
+}
+
+.status{
+margin-top:20px;
+color:gray;
+font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>🚚 Driver Mode</h1>
+
+<p>
+Enable live tracking for customers.
+</p>
+
+<button onclick="startTracking()">
+Start Live GPS
+</button>
+
+<div class="status" id="status">
+Waiting to start...
+</div>
+
+</div>
+
+<script>
+
+const landscaperId = 1
+
+let watchId = null
+
+async function sendLocation(lat,lng){
+
+try{
+
+await fetch("/api/update-location",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+landscaper_id:landscaperId,
+lat,
+lng
+})
+})
+
+document.getElementById("status").innerText =
+"📍 Live location updating"
+
+}catch(err){
+
+console.error(err)
+
+}
+
+}
+
+function startTracking(){
+
+if(!navigator.geolocation){
+
+alert("Geolocation not supported")
+
+return
+
+}
+
+watchId = navigator.geolocation.watchPosition(
+
+(position)=>{
+
+const lat = position.coords.latitude
+const lng = position.coords.longitude
+
+sendLocation(lat,lng)
+
+},
+
+(error)=>{
+
+console.error(error)
+
+},
+
+{
+enableHighAccuracy:true,
+maximumAge:0,
+timeout:5000
+}
+
+)
+
+document.getElementById("status").innerText =
+"GPS tracking started"
+
+}
+
+</script>
+
+</body>
+</html>
