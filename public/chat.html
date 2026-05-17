@@ -69,6 +69,14 @@ background:#39d353;
 color:white;
 }
 
+.chat-image{
+width:100%;
+border-radius:14px;
+margin-top:10px;
+max-height:400px;
+object-fit:cover;
+}
+
 .bottom{
 display:flex;
 padding:16px;
@@ -77,7 +85,7 @@ border-top:1px solid #ddd;
 gap:10px;
 }
 
-input{
+input[type="text"]{
 flex:1;
 padding:16px;
 border-radius:14px;
@@ -101,6 +109,14 @@ button:hover{
 opacity:.9;
 }
 
+#imageInput{
+display:none;
+}
+
+.uploadBtn{
+background:#222;
+}
+
 </style>
 
 </head>
@@ -120,9 +136,23 @@ Loading job room...
 <div class="bottom">
 
 <input
+type="text"
 id="messageInput"
 placeholder="Type a message..."
 />
+
+<input
+type="file"
+id="imageInput"
+accept="image/*"
+/>
+
+<button
+class="uploadBtn"
+id="imageBtn"
+>
+📷
+</button>
 
 <button id="sendBtn">
 Send
@@ -180,6 +210,12 @@ document.getElementById("messageInput")
 const sendBtn =
 document.getElementById("sendBtn")
 
+const imageBtn =
+document.getElementById("imageBtn")
+
+const imageInput =
+document.getElementById("imageInput")
+
 function addMessage(message,isMine=false){
 
 const div =
@@ -190,9 +226,25 @@ isMine
 ? "message mine"
 : "message"
 
+let imageHTML = ""
+
+if(message.image_url){
+
+imageHTML = `
+<img
+src="${message.image_url}"
+class="chat-image"
+/>
+`
+
+}
+
 div.innerHTML = `
-<strong>${message.username}</strong><br>
-${message.text}
+<strong>${message.username}</strong><br><br>
+
+${message.text || ""}
+
+${imageHTML}
 `
 
 messagesDiv.appendChild(div)
@@ -212,8 +264,11 @@ await client
 .order("created_at",{ ascending:true })
 
 if(error){
+
 console.error(error)
+
 return
+
 }
 
 messagesDiv.innerHTML = ""
@@ -261,6 +316,55 @@ input.value=""
 
 }
 
+async function uploadImage(file){
+
+const fileName =
+Date.now() + "-" + file.name
+
+const { error: uploadError } =
+await client.storage
+.from("job-images")
+.upload(fileName,file)
+
+if(uploadError){
+
+console.error(uploadError)
+
+alert(uploadError.message)
+
+return
+
+}
+
+const { data } =
+client.storage
+.from("job-images")
+.getPublicUrl(fileName)
+
+const imageUrl =
+data.publicUrl
+
+const { error } =
+await client
+.from("messages")
+.insert([
+{
+job_id:jobId,
+username:username,
+image_url:imageUrl
+}
+])
+
+if(error){
+
+console.error(error)
+
+alert(error.message)
+
+}
+
+}
+
 sendBtn.addEventListener(
 "click",
 sendMessage
@@ -277,6 +381,29 @@ sendMessage()
 }
 
 })
+
+imageBtn.addEventListener(
+"click",
+()=>{
+
+imageInput.click()
+
+}
+)
+
+imageInput.addEventListener(
+"change",
+async (e)=>{
+
+const file =
+e.target.files[0]
+
+if(!file) return
+
+uploadImage(file)
+
+}
+)
 
 client
 .channel("job-chat-" + jobId)
