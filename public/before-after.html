@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>LawnLink Before & After</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:system-ui;
+background:#f4f4f4;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.header{
+width:100%;
+background:#39d353;
+color:white;
+padding:22px;
+font-size:30px;
+font-weight:700;
+text-align:center;
+box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+
+.sub{
+margin-top:10px;
+font-size:15px;
+opacity:.9;
+}
+
+.container{
+width:100%;
+max-width:1000px;
+padding:30px;
+}
+
+.card{
+background:white;
+border-radius:20px;
+overflow:hidden;
+box-shadow:0 6px 20px rgba(0,0,0,.1);
+}
+
+.compare{
+position:relative;
+width:100%;
+height:600px;
+overflow:hidden;
+background:#ddd;
+}
+
+.compare img{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+user-select:none;
+pointer-events:none;
+}
+
+.afterWrapper{
+position:absolute;
+top:0;
+left:0;
+height:100%;
+width:50%;
+overflow:hidden;
+}
+
+.slider{
+position:absolute;
+top:0;
+left:50%;
+width:4px;
+height:100%;
+background:white;
+z-index:10;
+transform:translateX(-50%);
+box-shadow:0 0 12px rgba(0,0,0,.3);
+}
+
+.handle{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+width:70px;
+height:70px;
+border-radius:50%;
+background:#39d353;
+border:5px solid white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:30px;
+color:white;
+font-weight:700;
+box-shadow:0 4px 14px rgba(0,0,0,.3);
+}
+
+.labels{
+position:absolute;
+top:20px;
+left:20px;
+right:20px;
+display:flex;
+justify-content:space-between;
+z-index:20;
+pointer-events:none;
+}
+
+.label{
+background:rgba(0,0,0,.6);
+color:white;
+padding:10px 16px;
+border-radius:12px;
+font-weight:700;
+font-size:14px;
+backdrop-filter:blur(4px);
+}
+
+.uploads{
+display:flex;
+gap:16px;
+padding:20px;
+background:white;
+border-top:1px solid #eee;
+flex-wrap:wrap;
+}
+
+.uploadBox{
+flex:1;
+min-width:240px;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.uploadBox label{
+font-weight:700;
+font-size:15px;
+}
+
+input[type="file"]{
+padding:12px;
+border:1px solid #ccc;
+border-radius:12px;
+background:#fafafa;
+}
+
+.info{
+padding:20px;
+font-size:15px;
+color:#555;
+line-height:1.6;
+}
+
+@media(max-width:768px){
+
+.compare{
+height:400px;
+}
+
+.header{
+font-size:24px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+📸 LawnLink Before & After
+
+<div class="sub">
+Interactive landscaping transformation viewer
+</div>
+
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<div
+class="compare"
+id="compare"
+>
+
+<img
+id="beforeImage"
+src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1400&auto=format&fit=crop"
+>
+
+<div
+class="afterWrapper"
+id="afterWrapper"
+>
+
+<img
+id="afterImage"
+src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1400&auto=format&fit=crop"
+>
+
+</div>
+
+<div
+class="slider"
+id="slider"
+>
+
+<div class="handle">
+↔
+</div>
+
+</div>
+
+<div class="labels">
+
+<div class="label">
+BEFORE
+</div>
+
+<div class="label">
+AFTER
+</div>
+
+</div>
+
+</div>
+
+<div class="uploads">
+
+<div class="uploadBox">
+
+<label>
+Upload BEFORE Photo
+</label>
+
+<input
+type="file"
+id="beforeUpload"
+accept="image/*"
+/>
+
+</div>
+
+<div class="uploadBox">
+
+<label>
+Upload AFTER Photo
+</label>
+
+<input
+type="file"
+id="afterUpload"
+accept="image/*"
+/>
+
+</div>
+
+</div>
+
+<div class="info">
+
+Drag the slider left and right to compare lawn transformations in realtime.
+
+Perfect for:
+
+✅ Lawn mowing  
+✅ Landscaping  
+✅ Mulching  
+✅ Cleanup jobs  
+✅ Property maintenance  
+✅ Customer proof of work
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const compare =
+document.getElementById("compare")
+
+const slider =
+document.getElementById("slider")
+
+const afterWrapper =
+document.getElementById("afterWrapper")
+
+let isDragging = false
+
+function updateSlider(x){
+
+const rect =
+compare.getBoundingClientRect()
+
+let position =
+x - rect.left
+
+if(position < 0) position = 0
+
+if(position > rect.width)
+position = rect.width
+
+const percent =
+(position / rect.width) * 100
+
+slider.style.left =
+percent + "%"
+
+afterWrapper.style.width =
+percent + "%"
+
+}
+
+slider.addEventListener(
+"mousedown",
+()=>{
+
+isDragging = true
+
+}
+)
+
+window.addEventListener(
+"mouseup",
+()=>{
+
+isDragging = false
+
+}
+)
+
+window.addEventListener(
+"mousemove",
+(e)=>{
+
+if(!isDragging) return
+
+updateSlider(e.clientX)
+
+}
+)
+
+slider.addEventListener(
+"touchstart",
+()=>{
+
+isDragging = true
+
+}
+)
+
+window.addEventListener(
+"touchend",
+()=>{
+
+isDragging = false
+
+}
+)
+
+window.addEventListener(
+"touchmove",
+(e)=>{
+
+if(!isDragging) return
+
+updateSlider(
+e.touches[0].clientX
+)
+
+}
+)
+
+document
+.getElementById("beforeUpload")
+.addEventListener(
+"change",
+(e)=>{
+
+const file =
+e.target.files[0]
+
+if(!file) return
+
+const url =
+URL.createObjectURL(file)
+
+document
+.getElementById("beforeImage")
+.src = url
+
+}
+)
+
+document
+.getElementById("afterUpload")
+.addEventListener(
+"change",
+(e)=>{
+
+const file =
+e.target.files[0]
+
+if(!file) return
+
+const url =
+URL.createObjectURL(file)
+
+document
+.getElementById("afterImage")
+.src = url
+
+}
+)
+
+</script>
+
+</body>
+</html>
