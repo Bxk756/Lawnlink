@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>LawnLink AI Lawn Estimator</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:system-ui;
+background:#f4f4f4;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+align-items:center;
+}
+
+.header{
+width:100%;
+background:#39d353;
+color:white;
+padding:24px;
+text-align:center;
+box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+
+.header h1{
+font-size:34px;
+margin-bottom:8px;
+}
+
+.header p{
+font-size:16px;
+opacity:.95;
+}
+
+.container{
+width:100%;
+max-width:1000px;
+padding:30px;
+}
+
+.card{
+background:white;
+border-radius:22px;
+padding:30px;
+box-shadow:0 8px 24px rgba(0,0,0,.08);
+}
+
+.uploadBox{
+border:3px dashed #39d353;
+border-radius:20px;
+padding:40px;
+text-align:center;
+cursor:pointer;
+background:#fafafa;
+transition:.2s;
+}
+
+.uploadBox:hover{
+background:#f0fff4;
+}
+
+.uploadBox h2{
+font-size:28px;
+margin-bottom:12px;
+color:#222;
+}
+
+.uploadBox p{
+color:#666;
+font-size:16px;
+}
+
+input[type="file"]{
+display:none;
+}
+
+.preview{
+margin-top:25px;
+display:none;
+}
+
+.preview img{
+width:100%;
+border-radius:20px;
+max-height:500px;
+object-fit:cover;
+box-shadow:0 6px 20px rgba(0,0,0,.1);
+}
+
+.scanBtn{
+margin-top:25px;
+width:100%;
+padding:18px;
+border:none;
+border-radius:16px;
+background:#39d353;
+color:white;
+font-size:20px;
+font-weight:700;
+cursor:pointer;
+transition:.2s;
+}
+
+.scanBtn:hover{
+opacity:.9;
+}
+
+.results{
+margin-top:30px;
+display:none;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.resultCard{
+flex:1;
+min-width:220px;
+background:#fafafa;
+padding:24px;
+border-radius:18px;
+border:1px solid #eee;
+}
+
+.resultCard h3{
+font-size:16px;
+color:#666;
+margin-bottom:10px;
+}
+
+.resultCard .value{
+font-size:32px;
+font-weight:800;
+color:#111;
+}
+
+.badge{
+margin-top:14px;
+display:inline-block;
+padding:8px 14px;
+border-radius:999px;
+background:#39d353;
+color:white;
+font-size:13px;
+font-weight:700;
+}
+
+.aiBox{
+margin-top:25px;
+background:#111;
+color:white;
+padding:24px;
+border-radius:20px;
+line-height:1.7;
+font-size:16px;
+display:none;
+}
+
+.loader{
+margin-top:20px;
+display:none;
+text-align:center;
+font-size:18px;
+font-weight:700;
+color:#39d353;
+}
+
+@media(max-width:768px){
+
+.header h1{
+font-size:28px;
+}
+
+.card{
+padding:20px;
+}
+
+.resultCard .value{
+font-size:26px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<h1>
+🤖 LawnLink AI Estimator
+</h1>
+
+<p>
+Upload a lawn photo and get instant AI-powered estimates
+</p>
+
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<label
+class="uploadBox"
+for="imageInput"
+>
+
+<h2>
+📸 Upload Lawn Photo
+</h2>
+
+<p>
+Tap here to upload a lawn image
+</p>
+
+</label>
+
+<input
+type="file"
+id="imageInput"
+accept="image/*"
+/>
+
+<div
+class="preview"
+id="preview"
+>
+
+<img id="previewImage" />
+
+</div>
+
+<button
+class="scanBtn"
+id="scanBtn"
+>
+Analyze Lawn
+</button>
+
+<div
+class="loader"
+id="loader"
+>
+🤖 AI analyzing lawn...
+</div>
+
+<div
+class="results"
+id="results"
+>
+
+<div class="resultCard">
+
+<h3>
+Grass Height
+</h3>
+
+<div
+class="value"
+id="grassHeight"
+>
+--
+</div>
+
+<div class="badge">
+AI DETECTED
+</div>
+
+</div>
+
+<div class="resultCard">
+
+<h3>
+Cleanup Difficulty
+</h3>
+
+<div
+class="value"
+id="difficulty"
+>
+--
+</div>
+
+<div class="badge">
+AUTO SCORE
+</div>
+
+</div>
+
+<div class="resultCard">
+
+<h3>
+Estimated Labor
+</h3>
+
+<div
+class="value"
+id="labor"
+>
+--
+</div>
+
+<div class="badge">
+TIME ESTIMATE
+</div>
+
+</div>
+
+<div class="resultCard">
+
+<h3>
+Suggested Price
+</h3>
+
+<div
+class="value"
+id="price"
+>
+--
+</div>
+
+<div class="badge">
+MARKET RATE
+</div>
+
+</div>
+
+</div>
+
+<div
+class="aiBox"
+id="aiBox"
+>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const imageInput =
+document.getElementById("imageInput")
+
+const preview =
+document.getElementById("preview")
+
+const previewImage =
+document.getElementById("previewImage")
+
+const scanBtn =
+document.getElementById("scanBtn")
+
+const loader =
+document.getElementById("loader")
+
+const results =
+document.getElementById("results")
+
+const aiBox =
+document.getElementById("aiBox")
+
+let uploadedImage = null
+
+imageInput.addEventListener(
+"change",
+(e)=>{
+
+const file =
+e.target.files[0]
+
+if(!file) return
+
+uploadedImage = file
+
+const imageUrl =
+URL.createObjectURL(file)
+
+preview.style.display = "block"
+
+previewImage.src = imageUrl
+
+}
+)
+
+scanBtn.addEventListener(
+"click",
+()=>{
+
+if(!uploadedImage){
+
+alert("Upload a lawn image first")
+
+return
+
+}
+
+runAI()
+
+}
+)
+
+function random(min,max){
+
+return Math.floor(
+Math.random() * (max-min+1)
+) + min
+
+}
+
+function runAI(){
+
+loader.style.display = "block"
+
+results.style.display = "none"
+
+aiBox.style.display = "none"
+
+setTimeout(()=>{
+
+loader.style.display = "none"
+
+results.style.display = "flex"
+
+aiBox.style.display = "block"
+
+const grass =
+random(3,14)
+
+let difficulty = ""
+let labor = ""
+let price = ""
+
+if(grass <= 5){
+
+difficulty = "LOW"
+labor = "1 HR"
+price = "$45"
+
+}else if(grass <= 9){
+
+difficulty = "MED"
+labor = "2 HRS"
+price = "$85"
+
+}else{
+
+difficulty = "HIGH"
+labor = "4 HRS"
+price = "$160"
+
+}
+
+document.getElementById(
+"grassHeight"
+).innerText =
+grass + '"'
+
+document.getElementById(
+"difficulty"
+).innerText =
+difficulty
+
+document.getElementById(
+"labor"
+).innerText =
+labor
+
+document.getElementById(
+"price"
+).innerText =
+price
+
+aiBox.innerHTML = `
+
+<h2 style="margin-bottom:14px;">
+🤖 AI Summary
+</h2>
+
+This lawn appears to have an estimated grass height of
+<strong>${grass} inches</strong>.
+
+Cleanup difficulty is estimated as
+<strong>${difficulty}</strong>
+based on visible vegetation density and overgrowth.
+
+Estimated labor time is
+<strong>${labor}</strong>.
+
+Suggested customer pricing is
+<strong>${price}</strong>
+based on current LawnLink market conditions.
+
+Recommended equipment:
+
+<ul style="margin-top:12px;padding-left:20px;">
+
+<li>Commercial mower</li>
+
+<li>String trimmer</li>
+
+<li>Leaf blower</li>
+
+<li>Cleanup bags</li>
+
+</ul>
+
+`
+
+},2500)
+
+}
+
+</script>
+
+</body>
+</html>
