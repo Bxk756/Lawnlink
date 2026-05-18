@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>LawnLink AI Lawn Estimator</title>
+<title>LawnLink AI Estimator</title>
 
 <style>
 
@@ -21,39 +22,40 @@ background:#f4f4f4;
 min-height:100vh;
 display:flex;
 flex-direction:column;
-align-items:center;
 }
 
 .header{
-width:100%;
 background:#39d353;
-color:white;
 padding:24px;
 text-align:center;
-box-shadow:0 4px 12px rgba(0,0,0,.1);
+color:white;
+box-shadow:0 4px 14px rgba(0,0,0,.1);
 }
 
 .header h1{
-font-size:34px;
-margin-bottom:8px;
+font-size:42px;
+font-weight:800;
+margin-bottom:6px;
 }
 
 .header p{
-font-size:16px;
+font-size:17px;
 opacity:.95;
 }
 
 .container{
 width:100%;
-max-width:1000px;
-padding:30px;
+max-width:1100px;
+margin:auto;
+padding:30px 20px 60px;
 }
 
 .card{
 background:white;
-border-radius:22px;
+border-radius:24px;
 padding:30px;
-box-shadow:0 8px 24px rgba(0,0,0,.08);
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+margin-bottom:25px;
 }
 
 .uploadBox{
@@ -62,131 +64,166 @@ border-radius:20px;
 padding:40px;
 text-align:center;
 cursor:pointer;
-background:#fafafa;
+background:white;
 transition:.2s;
+width:100%;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+min-height:220px;
+overflow:hidden;
+position:relative;
 }
 
 .uploadBox:hover{
-background:#f0fff4;
+background:#f7fff8;
 }
 
-.uploadBox h2{
-font-size:28px;
-margin-bottom:12px;
+.uploadBox img{
+max-width:100%;
+max-height:400px;
+border-radius:16px;
+object-fit:cover;
+margin-top:15px;
+}
+
+.uploadTitle{
+font-size:36px;
+font-weight:800;
+margin-bottom:10px;
 color:#222;
 }
 
-.uploadBox p{
+.uploadSub{
+font-size:18px;
 color:#666;
-font-size:16px;
 }
 
 input[type="file"]{
-display:none;
+position:absolute;
+opacity:0;
+pointer-events:none;
+width:0;
+height:0;
 }
 
-.preview{
-margin-top:25px;
-display:none;
-}
-
-.preview img{
+.analyzeBtn{
 width:100%;
-border-radius:20px;
-max-height:500px;
-object-fit:cover;
-box-shadow:0 6px 20px rgba(0,0,0,.1);
-}
-
-.scanBtn{
 margin-top:25px;
-width:100%;
-padding:18px;
+padding:22px;
 border:none;
-border-radius:16px;
+border-radius:18px;
 background:#39d353;
 color:white;
-font-size:20px;
-font-weight:700;
+font-size:24px;
+font-weight:800;
 cursor:pointer;
 transition:.2s;
 }
 
-.scanBtn:hover{
-opacity:.9;
+.analyzeBtn:hover{
+transform:scale(1.01);
+opacity:.95;
 }
 
 .results{
-margin-top:30px;
 display:none;
+margin-top:25px;
+}
+
+.resultGrid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 gap:20px;
-flex-wrap:wrap;
 }
 
 .resultCard{
-flex:1;
-min-width:220px;
-background:#fafafa;
+background:white;
 padding:24px;
-border-radius:18px;
-border:1px solid #eee;
+border-radius:20px;
+box-shadow:0 8px 22px rgba(0,0,0,.08);
+text-align:center;
 }
 
-.resultCard h3{
+.resultLabel{
 font-size:16px;
 color:#666;
 margin-bottom:10px;
 }
 
-.resultCard .value{
-font-size:32px;
+.resultValue{
+font-size:34px;
 font-weight:800;
-color:#111;
-}
-
-.badge{
-margin-top:14px;
-display:inline-block;
-padding:8px 14px;
-border-radius:999px;
-background:#39d353;
-color:white;
-font-size:13px;
-font-weight:700;
-}
-
-.aiBox{
-margin-top:25px;
-background:#111;
-color:white;
-padding:24px;
-border-radius:20px;
-line-height:1.7;
-font-size:16px;
-display:none;
-}
-
-.loader{
-margin-top:20px;
-display:none;
-text-align:center;
-font-size:18px;
-font-weight:700;
 color:#39d353;
 }
 
-@media(max-width:768px){
+.analysis{
+margin-top:25px;
+background:white;
+padding:24px;
+border-radius:20px;
+box-shadow:0 8px 22px rgba(0,0,0,.08);
+line-height:1.7;
+font-size:18px;
+color:#333;
+}
+
+.loading{
+display:none;
+margin-top:25px;
+text-align:center;
+}
+
+.spinner{
+width:90px;
+height:90px;
+border:10px solid #ddd;
+border-top:10px solid #39d353;
+border-radius:50%;
+animation:spin 1s linear infinite;
+margin:auto auto 25px;
+}
+
+.loadingText{
+font-size:24px;
+font-weight:700;
+color:#444;
+}
+
+@keyframes spin{
+0%{
+transform:rotate(0deg);
+}
+100%{
+transform:rotate(360deg);
+}
+}
+
+.previewImage{
+margin-top:20px;
+max-width:100%;
+border-radius:18px;
+box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+
+@media(max-width:700px){
 
 .header h1{
 font-size:28px;
 }
 
-.card{
-padding:20px;
+.uploadTitle{
+font-size:26px;
 }
 
-.resultCard .value{
-font-size:26px;
+.analyzeBtn{
+font-size:20px;
+padding:18px;
+}
+
+.resultValue{
+font-size:28px;
 }
 
 }
@@ -204,7 +241,7 @@ font-size:26px;
 </h1>
 
 <p>
-Upload a lawn photo and get instant AI-powered estimates
+Upload a lawn photo and get instant AI-powered landscaping estimates
 </p>
 
 </div>
@@ -213,48 +250,48 @@ Upload a lawn photo and get instant AI-powered estimates
 
 <div class="card">
 
-<label
-class="uploadBox"
-for="imageInput"
->
+<label class="uploadBox" for="fileInput">
 
-<h2>
+<div class="uploadTitle">
 📸 Upload Lawn Photo
-</h2>
+</div>
 
-<p>
+<div class="uploadSub">
 Tap here to upload a lawn image
-</p>
+</div>
 
-</label>
+<img
+id="preview"
+class="previewImage"
+style="display:none;"
+/>
 
 <input
 type="file"
-id="imageInput"
+id="fileInput"
 accept="image/*"
 />
 
-<div
-class="preview"
-id="preview"
->
-
-<img id="previewImage" />
-
-</div>
+</label>
 
 <button
-class="scanBtn"
-id="scanBtn"
+class="analyzeBtn"
+id="analyzeBtn"
 >
 Analyze Lawn
 </button>
 
 <div
-class="loader"
-id="loader"
+class="loading"
+id="loading"
 >
-🤖 AI analyzing lawn...
+
+<div class="spinner"></div>
+
+<div class="loadingText">
+AI analyzing lawn...
+</div>
+
 </div>
 
 <div
@@ -262,88 +299,76 @@ class="results"
 id="results"
 >
 
-<div class="resultCard">
-
-<h3>
-Grass Height
-</h3>
-
-<div
-class="value"
-id="grassHeight"
->
---
-</div>
-
-<div class="badge">
-AI DETECTED
-</div>
-
-</div>
+<div class="resultGrid">
 
 <div class="resultCard">
 
-<h3>
-Cleanup Difficulty
-</h3>
-
-<div
-class="value"
-id="difficulty"
->
---
+<div class="resultLabel">
+Estimated Price
 </div>
 
-<div class="badge">
-AUTO SCORE
+<div
+class="resultValue"
+id="priceResult"
+>
+$0
 </div>
 
 </div>
 
 <div class="resultCard">
 
-<h3>
-Estimated Labor
-</h3>
-
-<div
-class="value"
-id="labor"
->
---
+<div class="resultLabel">
+Estimated Size
 </div>
 
-<div class="badge">
-TIME ESTIMATE
+<div
+class="resultValue"
+id="sizeResult"
+>
+0 sq ft
 </div>
 
 </div>
 
 <div class="resultCard">
 
-<h3>
-Suggested Price
-</h3>
-
-<div
-class="value"
-id="price"
->
---
-</div>
-
-<div class="badge">
-MARKET RATE
-</div>
-
-</div>
-
+<div class="resultLabel">
+Labor Hours
 </div>
 
 <div
-class="aiBox"
-id="aiBox"
+class="resultValue"
+id="laborResult"
 >
+0 hrs
+</div>
+
+</div>
+
+<div class="resultCard">
+
+<div class="resultLabel">
+Difficulty
+</div>
+
+<div
+class="resultValue"
+id="difficultyResult"
+>
+Easy
+</div>
+
+</div>
+
+</div>
+
+<div
+class="analysis"
+id="analysisText"
+>
+
+</div>
 
 </div>
 
@@ -353,179 +378,164 @@ id="aiBox"
 
 <script>
 
-const imageInput =
-document.getElementById("imageInput")
+const fileInput =
+document.getElementById("fileInput")
 
 const preview =
 document.getElementById("preview")
 
-const previewImage =
-document.getElementById("previewImage")
+const analyzeBtn =
+document.getElementById("analyzeBtn")
 
-const scanBtn =
-document.getElementById("scanBtn")
-
-const loader =
-document.getElementById("loader")
+const loading =
+document.getElementById("loading")
 
 const results =
 document.getElementById("results")
 
-const aiBox =
-document.getElementById("aiBox")
+const priceResult =
+document.getElementById("priceResult")
+
+const sizeResult =
+document.getElementById("sizeResult")
+
+const laborResult =
+document.getElementById("laborResult")
+
+const difficultyResult =
+document.getElementById("difficultyResult")
+
+const analysisText =
+document.getElementById("analysisText")
 
 let uploadedImage = null
 
-imageInput.addEventListener(
+fileInput.addEventListener(
 "change",
-(e)=>{
+(event)=>{
 
 const file =
-e.target.files[0]
+event.target.files[0]
 
 if(!file) return
 
 uploadedImage = file
 
-const imageUrl =
-URL.createObjectURL(file)
+const reader =
+new FileReader()
+
+reader.onload = (e)=>{
+
+preview.src = e.target.result
 
 preview.style.display = "block"
 
-previewImage.src = imageUrl
+}
+
+reader.readAsDataURL(file)
 
 }
 )
 
-scanBtn.addEventListener(
+analyzeBtn.addEventListener(
 "click",
 ()=>{
 
 if(!uploadedImage){
 
-alert("Upload a lawn image first")
+alert("Please upload a lawn image first.")
 
 return
 
 }
 
-runAI()
-
-}
-)
-
-function random(min,max){
-
-return Math.floor(
-Math.random() * (max-min+1)
-) + min
-
-}
-
-function runAI(){
-
-loader.style.display = "block"
-
 results.style.display = "none"
 
-aiBox.style.display = "none"
+loading.style.display = "block"
 
 setTimeout(()=>{
 
-loader.style.display = "none"
+loading.style.display = "none"
 
-results.style.display = "flex"
+results.style.display = "block"
 
-aiBox.style.display = "block"
+const estimatedPrice =
+Math.floor(
+Math.random()*400 + 120
+)
 
-const grass =
-random(3,14)
+const estimatedSize =
+Math.floor(
+Math.random()*5000 + 1500
+)
 
-let difficulty = ""
-let labor = ""
-let price = ""
+const laborHours =
+Math.floor(
+Math.random()*8 + 2
+)
 
-if(grass <= 5){
+const difficulties = [
+"Easy",
+"Medium",
+"Hard"
+]
 
-difficulty = "LOW"
-labor = "1 HR"
-price = "$45"
+const difficulty =
+difficulties[
+Math.floor(
+Math.random()*difficulties.length
+)
+]
 
-}else if(grass <= 9){
+priceResult.innerText =
+"$" + estimatedPrice
 
-difficulty = "MED"
-labor = "2 HRS"
-price = "$85"
+sizeResult.innerText =
+estimatedSize + " sq ft"
 
-}else{
+laborResult.innerText =
+laborHours + " hrs"
 
-difficulty = "HIGH"
-labor = "4 HRS"
-price = "$160"
-
-}
-
-document.getElementById(
-"grassHeight"
-).innerText =
-grass + '"'
-
-document.getElementById(
-"difficulty"
-).innerText =
+difficultyResult.innerText =
 difficulty
 
-document.getElementById(
-"labor"
-).innerText =
-labor
+analysisText.innerHTML = `
+<b>AI Lawn Analysis Complete</b>
+<br><br>
 
-document.getElementById(
-"price"
-).innerText =
-price
+The uploaded property appears to have moderate grass density with visible edging requirements and trimming areas.
 
-aiBox.innerHTML = `
-
-<h2 style="margin-bottom:14px;">
-🤖 AI Summary
-</h2>
-
-This lawn appears to have an estimated grass height of
-<strong>${grass} inches</strong>.
-
-Cleanup difficulty is estimated as
-<strong>${difficulty}</strong>
-based on visible vegetation density and overgrowth.
-
-Estimated labor time is
-<strong>${labor}</strong>.
-
-Suggested customer pricing is
-<strong>${price}</strong>
-based on current LawnLink market conditions.
-
-Recommended equipment:
-
-<ul style="margin-top:12px;padding-left:20px;">
-
-<li>Commercial mower</li>
-
-<li>String trimmer</li>
-
-<li>Leaf blower</li>
-
-<li>Cleanup bags</li>
-
+Recommended services include:
+<ul style="margin-top:15px;padding-left:20px;">
+<li>Lawn mowing</li>
+<li>Edge trimming</li>
+<li>Weed cleanup</li>
+<li>Blower cleanup</li>
 </ul>
 
+<br>
+
+Estimated project completion time:
+<b>${laborHours} labor hours</b>
+
+<br><br>
+
+Suggested customer quote:
+<b>$${estimatedPrice}</b>
+
+<br><br>
+
+Difficulty rating:
+<b>${difficulty}</b>
 `
 
 },2500)
 
 }
+)
 
 </script>
 
 </body>
+
 </html>
