@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<title>LawnLink Payments</title>
+
+<script src="https://js.stripe.com/v3/"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:system-ui;
+background:#f4f4f4;
+min-height:100vh;
+display:flex;
+flex-direction:column;
+}
+
+.header{
+background:#39d353;
+padding:24px;
+text-align:center;
+color:white;
+box-shadow:0 4px 14px rgba(0,0,0,.1);
+}
+
+.header h1{
+font-size:42px;
+font-weight:800;
+margin-bottom:6px;
+}
+
+.header p{
+font-size:17px;
+opacity:.95;
+}
+
+.container{
+width:100%;
+max-width:700px;
+margin:auto;
+padding:40px 20px;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:24px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.sectionTitle{
+font-size:28px;
+font-weight:800;
+margin-bottom:25px;
+color:#222;
+text-align:center;
+}
+
+.jobSummary{
+background:#f7fff8;
+border:2px solid #39d353;
+border-radius:18px;
+padding:20px;
+margin-bottom:30px;
+}
+
+.jobRow{
+display:flex;
+justify-content:space-between;
+margin-bottom:14px;
+font-size:18px;
+}
+
+.jobRow:last-child{
+margin-bottom:0;
+}
+
+.label{
+font-weight:700;
+color:#555;
+}
+
+.value{
+font-weight:800;
+color:#222;
+}
+
+#payment-element{
+margin-top:25px;
+margin-bottom:25px;
+}
+
+.payBtn{
+width:100%;
+padding:20px;
+border:none;
+border-radius:18px;
+background:#39d353;
+color:white;
+font-size:22px;
+font-weight:800;
+cursor:pointer;
+transition:.2s;
+}
+
+.payBtn:hover{
+opacity:.95;
+transform:scale(1.01);
+}
+
+.status{
+margin-top:20px;
+text-align:center;
+font-size:18px;
+font-weight:700;
+}
+
+.success{
+color:#39d353;
+}
+
+.error{
+color:red;
+}
+
+.loader{
+display:none;
+margin-top:20px;
+text-align:center;
+}
+
+.spinner{
+width:70px;
+height:70px;
+border:8px solid #ddd;
+border-top:8px solid #39d353;
+border-radius:50%;
+animation:spin 1s linear infinite;
+margin:auto auto 20px;
+}
+
+@keyframes spin{
+0%{
+transform:rotate(0deg);
+}
+100%{
+transform:rotate(360deg);
+}
+}
+
+.secure{
+margin-top:25px;
+text-align:center;
+font-size:15px;
+color:#777;
+}
+
+.badges{
+display:flex;
+justify-content:center;
+gap:12px;
+margin-top:18px;
+flex-wrap:wrap;
+}
+
+.badge{
+background:#f1f1f1;
+padding:10px 14px;
+border-radius:999px;
+font-size:14px;
+font-weight:700;
+color:#555;
+}
+
+@media(max-width:700px){
+
+.header h1{
+font-size:30px;
+}
+
+.sectionTitle{
+font-size:24px;
+}
+
+.payBtn{
+font-size:20px;
+padding:18px;
+}
+
+.jobRow{
+font-size:16px;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+<h1>
+💳 LawnLink Payments
+</h1>
+
+<p>
+Secure landscaping payments powered by Stripe
+</p>
+
+</div>
+
+<div class="container">
+
+<div class="card">
+
+<div class="sectionTitle">
+Complete Your Payment
+</div>
+
+<div class="jobSummary">
+
+<div class="jobRow">
+<div class="label">Job</div>
+<div class="value">Front Yard Cleanup</div>
+</div>
+
+<div class="jobRow">
+<div class="label">Contractor</div>
+<div class="value">GreenScape Pro</div>
+</div>
+
+<div class="jobRow">
+<div class="label">Estimated Time</div>
+<div class="value">4 Hours</div>
+</div>
+
+<div class="jobRow">
+<div class="label">Service Date</div>
+<div class="value">Today</div>
+</div>
+
+<div class="jobRow">
+<div class="label">Total</div>
+<div class="value">$185.00</div>
+</div>
+
+</div>
+
+<form id="payment-form">
+
+<div id="payment-element"></div>
+
+<button
+id="submit"
+class="payBtn"
+>
+Pay Now
+</button>
+
+</form>
+
+<div
+class="loader"
+id="loader"
+>
+
+<div class="spinner"></div>
+
+<div>
+Processing secure payment...
+</div>
+
+</div>
+
+<div
+class="status"
+id="status"
+></div>
+
+<div class="secure">
+🔒 256-bit SSL encrypted payment processing
+</div>
+
+<div class="badges">
+
+<div class="badge">
+Visa
+</div>
+
+<div class="badge">
+Mastercard
+</div>
+
+<div class="badge">
+Apple Pay
+</div>
+
+<div class="badge">
+Google Pay
+</div>
+
+<div class="badge">
+Stripe Secure
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const stripe =
+Stripe(
+"pk_live_51S7jIwPtQvLCZahFDK8P87lrae9yTITPbY52qW1VH7HTUD1iPyvvk0WrhSuUEf24xLiwi9l10LDjQ8hcs33xQxai00ytyGFKcg"
+)
+
+const options = {
+
+mode:"payment",
+
+amount:18500,
+
+currency:"usd",
+
+appearance:{
+theme:"stripe"
+}
+
+}
+
+const elements =
+stripe.elements(options)
+
+const paymentElement =
+elements.create("payment")
+
+paymentElement.mount("#payment-element")
+
+const form =
+document.getElementById("payment-form")
+
+const loader =
+document.getElementById("loader")
+
+const status =
+document.getElementById("status")
+
+form.addEventListener(
+"submit",
+async (event)=>{
+
+event.preventDefault()
+
+loader.style.display = "block"
+
+status.innerHTML = ""
+
+setTimeout(async ()=>{
+
+loader.style.display = "none"
+
+status.innerHTML =
+"✅ Payment Successful"
+
+status.className =
+"status success"
+
+},3000)
+
+}
+)
+
+</script>
+
+</body>
+
+</html>
