@@ -44,6 +44,16 @@ border-bottom:1px solid #ddd;
 color:#555;
 }
 
+.typingBar{
+height:30px;
+padding:6px 16px;
+font-size:14px;
+color:#666;
+background:#fafafa;
+border-bottom:1px solid #eee;
+font-style:italic;
+}
+
 #messages{
 flex:1;
 overflow-y:auto;
@@ -131,6 +141,9 @@ background:#222;
 Loading job room...
 </div>
 
+<div class="typingBar" id="typingBar">
+</div>
+
 <div id="messages"></div>
 
 <div class="bottom">
@@ -215,6 +228,11 @@ document.getElementById("imageBtn")
 
 const imageInput =
 document.getElementById("imageInput")
+
+const typingBar =
+document.getElementById("typingBar")
+
+let typingTimeout = null
 
 function addMessage(message,isMine=false){
 
@@ -314,6 +332,8 @@ return
 
 input.value=""
 
+sendTyping(false)
+
 }
 
 async function uploadImage(file){
@@ -364,6 +384,37 @@ alert(error.message)
 }
 
 }
+
+function sendTyping(isTyping){
+
+client.channel("typing-" + jobId).send({
+type:"broadcast",
+event:"typing",
+payload:{
+username,
+isTyping
+}
+})
+
+}
+
+input.addEventListener(
+"input",
+()=>{
+
+sendTyping(true)
+
+clearTimeout(typingTimeout)
+
+typingTimeout =
+setTimeout(()=>{
+
+sendTyping(false)
+
+},1200)
+
+}
+)
 
 sendBtn.addEventListener(
 "click",
@@ -425,6 +476,35 @@ addMessage(
 payload.new,
 payload.new.username === username
 )
+
+}
+)
+.subscribe()
+
+client
+.channel("typing-" + jobId)
+.on(
+"broadcast",
+{
+event:"typing"
+},
+(payload)=>{
+
+if(
+payload.payload.username === username
+) return
+
+if(payload.payload.isTyping){
+
+typingBar.innerText =
+payload.payload.username +
+" is typing..."
+
+}else{
+
+typingBar.innerText = ""
+
+}
 
 }
 )
