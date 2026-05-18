@@ -4,7 +4,11 @@
 <head>
 
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+/>
 
 <title>LawnLink Payments</title>
 
@@ -166,23 +170,6 @@ font-size:15px;
 color:#777;
 }
 
-.badges{
-display:flex;
-justify-content:center;
-gap:12px;
-margin-top:18px;
-flex-wrap:wrap;
-}
-
-.badge{
-background:#f1f1f1;
-padding:10px 14px;
-border-radius:999px;
-font-size:14px;
-font-weight:700;
-color:#555;
-}
-
 @media(max-width:700px){
 
 .header h1{
@@ -267,7 +254,7 @@ Complete Your Payment
 id="submit"
 class="payBtn"
 >
-Pay Now
+Pay $185
 </button>
 
 </form>
@@ -291,31 +278,7 @@ id="status"
 ></div>
 
 <div class="secure">
-🔒 256-bit SSL encrypted payment processing
-</div>
-
-<div class="badges">
-
-<div class="badge">
-Visa
-</div>
-
-<div class="badge">
-Mastercard
-</div>
-
-<div class="badge">
-Apple Pay
-</div>
-
-<div class="badge">
-Google Pay
-</div>
-
-<div class="badge">
-Stripe Secure
-</div>
-
+🔒 Secure Stripe encrypted checkout
 </div>
 
 </div>
@@ -329,29 +292,7 @@ Stripe(
 "pk_live_51S7jIwPtQvLCZahFDK8P87lrae9yTITPbY52qW1VH7HTUD1iPyvvk0WrhSuUEf24xLiwi9l10LDjQ8hcs33xQxai00ytyGFKcg"
 )
 
-const options = {
-
-mode:"payment",
-
-amount:18500,
-
-currency:"usd",
-
-appearance:{
-theme:"stripe"
-}
-
-}
-
-const elements =
-stripe.elements(options)
-
-const paymentElement =
-elements.create("payment")
-
-paymentElement.mount("#payment-element")
-
-const form =
+const paymentForm =
 document.getElementById("payment-form")
 
 const loader =
@@ -360,9 +301,51 @@ document.getElementById("loader")
 const status =
 document.getElementById("status")
 
-form.addEventListener(
+let elements
+
+async function initializePayment(){
+
+const response =
+await fetch(
+"/api/create-payment-intent",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+amount:185,
+jobName:"Front Yard Cleanup",
+customerName:"LawnLink Customer"
+})
+}
+)
+
+const data =
+await response.json()
+
+const clientSecret =
+data.clientSecret
+
+elements =
+stripe.elements({
+clientSecret
+})
+
+const paymentElement =
+elements.create("payment")
+
+paymentElement.mount(
+"#payment-element"
+)
+
+}
+
+initializePayment()
+
+paymentForm.addEventListener(
 "submit",
-async (event)=>{
+async(event)=>{
 
 event.preventDefault()
 
@@ -370,17 +353,39 @@ loader.style.display = "block"
 
 status.innerHTML = ""
 
-setTimeout(async ()=>{
+const result =
+await stripe.confirmPayment({
+
+elements,
+
+confirmParams:{
+return_url:
+window.location.href
+},
+
+redirect:"if_required"
+
+})
 
 loader.style.display = "none"
 
+if(result.error){
+
 status.innerHTML =
-"✅ Payment Successful"
+"❌ " + result.error.message
+
+status.className =
+"status error"
+
+return
+
+}
+
+status.innerHTML =
+"✅ Payment successful"
 
 status.className =
 "status success"
-
-},3000)
 
 }
 )
