@@ -5,7 +5,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>LawnLink Job Chat</title>
+<title>LawnLink Voice Chat</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -96,6 +96,11 @@ max-height:400px;
 object-fit:cover;
 }
 
+.voice{
+margin-top:10px;
+width:100%;
+}
+
 .meta{
 margin-top:8px;
 font-size:12px;
@@ -121,7 +126,7 @@ outline:none;
 }
 
 button{
-padding:16px 22px;
+padding:16px 18px;
 border:none;
 border-radius:14px;
 background:#39d353;
@@ -139,6 +144,14 @@ display:none;
 background:#222;
 }
 
+.voiceBtn{
+background:#2563eb;
+}
+
+.recording{
+background:#dc2626 !important;
+}
+
 </style>
 
 </head>
@@ -146,7 +159,7 @@ background:#222;
 <body>
 
 <div class="header">
-💬 LawnLink Job Chat
+🎙️ LawnLink Voice Chat
 </div>
 
 <div class="topBar">
@@ -195,6 +208,13 @@ id="imageBtn"
 📷
 </button>
 
+<button
+class="voiceBtn"
+id="voiceBtn"
+>
+🎤
+</button>
+
 <button id="sendBtn">
 Send
 </button>
@@ -207,7 +227,7 @@ const SUPABASE_URL =
 "https://zapztkpavvtslvmjzxbh.supabase.co"
 
 const SUPABASE_ANON_KEY =
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcHp0a3BhdnZ0c2x2bWp6eGJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjg2MzQsImV4cCI6MjA4OTAwNDYzNH0.81y2QP0GKLQJBkgjZkrjEhfEV_2OhJxaxpK1NfwDHRg"
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
 const client =
 window.supabase.createClient(
@@ -263,7 +283,13 @@ document.getElementById("typingBar")
 const onlineStatus =
 document.getElementById("onlineStatus")
 
+const voiceBtn =
+document.getElementById("voiceBtn")
+
 let typingTimeout = null
+
+let mediaRecorder = null
+let audioChunks = []
 
 function addMessage(message,isMine=false){
 
@@ -288,12 +314,28 @@ class="chat-image"
 
 }
 
+let voiceHTML = ""
+
+if(message.voice_url){
+
+voiceHTML = `
+<audio
+controls
+class="voice"
+src="${message.voice_url}">
+</audio>
+`
+
+}
+
 div.innerHTML = `
 <strong>${message.username}</strong><br><br>
 
 ${message.text || ""}
 
 ${imageHTML}
+
+${voiceHTML}
 
 <div class="meta">
 
@@ -330,32 +372,12 @@ messagesDiv.innerHTML = ""
 
 data.forEach(msg => {
 
-if(
-msg.username !== username
-&& !msg.seen
-){
-
-markSeen(msg.id)
-
-}
-
 addMessage(
 msg,
 msg.username === username
 )
 
 })
-
-}
-
-async function markSeen(messageId){
-
-await client
-.from("messages")
-.update({
-seen:true
-})
-.eq("id",messageId)
 
 }
 
@@ -366,7 +388,6 @@ input.value.trim()
 
 if(!text) return
 
-const { error } =
 await client
 .from("messages")
 .insert([
@@ -378,35 +399,21 @@ seen:false
 }
 ])
 
-if(error){
-
-console.error(error)
-
-alert(error.message)
-
-return
-
-}
-
 input.value=""
 
-sendTyping(false)
-
 }
 
-async function uploadImage(file){
+async function uploadVoice(blob){
 
 const fileName =
-Date.now() + "-" + file.name
+Date.now() + ".webm"
 
 const { error: uploadError } =
 await client.storage
 .from("job-images")
-.upload(fileName,file)
+.upload(fileName,blob)
 
 if(uploadError){
-
-console.error(uploadError)
 
 alert(uploadError.message)
 
@@ -419,62 +426,89 @@ client.storage
 .from("job-images")
 .getPublicUrl(fileName)
 
-const imageUrl =
-data.publicUrl
-
 await client
 .from("messages")
 .insert([
 {
 job_id:jobId,
 username:username,
-image_url:imageUrl,
+voice_url:data.publicUrl,
 seen:false
 }
 ])
 
 }
 
-function sendTyping(isTyping){
+async function startRecording(){
 
-client.channel("typing-" + jobId).send({
-type:"broadcast",
-event:"typing",
-payload:{
-username,
-isTyping
-}
+const stream =
+await navigator.mediaDevices.getUserMedia({
+audio:true
 })
 
+mediaRecorder =
+new MediaRecorder(stream)
+
+audioChunks = []
+
+mediaRecorder.ondataavailable =
+(event)=>{
+
+audioChunks.push(event.data)
+
 }
 
-function sendPresence(isOnline){
+mediaRecorder.onstop =
+async ()=>{
 
-client.channel("presence-" + jobId).send({
-type:"broadcast",
-event:"presence",
-payload:{
-username,
-isOnline
-}
+const audioBlob =
+new Blob(audioChunks,{
+type:"audio/webm"
 })
 
+uploadVoice(audioBlob)
+
 }
 
-input.addEventListener(
-"input",
-()=>{
+mediaRecorder.start()
 
-sendTyping(true)
+voiceBtn.classList.add(
+"recording"
+)
 
-clearTimeout(typingTimeout)
+voiceBtn.innerText = "⏹️"
 
-typingTimeout =
-setTimeout(()=>{
+}
 
-sendTyping(false)
+function stopRecording(){
 
-},1200)
+mediaRecorder.stop()
+
+voiceBtn.classList.remove(
+"recording"
+)
+
+voiceBtn.innerText = "🎤"
+
+}
+
+voiceBtn.addEventListener(
+"click",
+async ()=>{
+
+if(
+!mediaRecorder
+||
+mediaRecorder.state === "inactive"
+){
+
+startRecording()
+
+}else{
+
+stopRecording()
+
+}
 
 }
 )
@@ -496,38 +530,6 @@ sendMessage()
 
 })
 
-imageBtn.addEventListener(
-"click",
-()=>{
-
-imageInput.click()
-
-}
-)
-
-imageInput.addEventListener(
-"change",
-async (e)=>{
-
-const file =
-e.target.files[0]
-
-if(!file) return
-
-uploadImage(file)
-
-}
-)
-
-window.addEventListener(
-"beforeunload",
-()=>{
-
-sendPresence(false)
-
-}
-)
-
 client
 .channel("job-chat-" + jobId)
 .on(
@@ -544,86 +546,10 @@ String(payload.new.job_id)
 !== String(jobId)
 ) return
 
-if(
-payload.new.username !== username
-){
-
-markSeen(payload.new.id)
-
-}
-
 addMessage(
 payload.new,
 payload.new.username === username
 )
-
-}
-)
-.subscribe((status)=>{
-
-if(status==="SUBSCRIBED"){
-
-sendPresence(true)
-
-}
-
-})
-
-client
-.channel("typing-" + jobId)
-.on(
-"broadcast",
-{
-event:"typing"
-},
-(payload)=>{
-
-if(
-payload.payload.username === username
-) return
-
-if(payload.payload.isTyping){
-
-typingBar.innerText =
-payload.payload.username +
-" is typing..."
-
-}else{
-
-typingBar.innerText = ""
-
-}
-
-}
-)
-.subscribe()
-
-client
-.channel("presence-" + jobId)
-.on(
-"broadcast",
-{
-event:"presence"
-},
-(payload)=>{
-
-if(
-payload.payload.username === username
-) return
-
-if(payload.payload.isOnline){
-
-onlineStatus.innerText =
-payload.payload.username +
-" is online"
-
-}else{
-
-onlineStatus.innerText =
-payload.payload.username +
-" went offline"
-
-}
 
 }
 )
