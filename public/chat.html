@@ -28,24 +28,33 @@ flex-direction:column;
 .header{
 background:#39d353;
 color:white;
-padding:20px;
-font-size:28px;
+padding:18px;
+font-size:26px;
 font-weight:700;
 text-align:center;
 box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
-.jobBar{
+.topBar{
 background:white;
-padding:12px;
-text-align:center;
-font-size:15px;
+padding:10px 16px;
 border-bottom:1px solid #ddd;
-color:#555;
+}
+
+.roomTitle{
+font-size:15px;
+color:#444;
+}
+
+.onlineStatus{
+font-size:13px;
+color:#16a34a;
+margin-top:4px;
+font-weight:600;
 }
 
 .typingBar{
-height:30px;
+height:28px;
 padding:6px 16px;
 font-size:14px;
 color:#666;
@@ -87,6 +96,13 @@ max-height:400px;
 object-fit:cover;
 }
 
+.meta{
+margin-top:8px;
+font-size:12px;
+opacity:.8;
+text-align:right;
+}
+
 .bottom{
 display:flex;
 padding:16px;
@@ -115,10 +131,6 @@ font-weight:700;
 cursor:pointer;
 }
 
-button:hover{
-opacity:.9;
-}
-
 #imageInput{
 display:none;
 }
@@ -137,12 +149,28 @@ background:#222;
 💬 LawnLink Job Chat
 </div>
 
-<div class="jobBar" id="jobInfo">
-Loading job room...
+<div class="topBar">
+
+<div
+class="roomTitle"
+id="jobInfo"
+>
+Loading room...
 </div>
 
-<div class="typingBar" id="typingBar">
+<div
+class="onlineStatus"
+id="onlineStatus"
+>
+Connecting...
 </div>
+
+</div>
+
+<div
+class="typingBar"
+id="typingBar"
+></div>
 
 <div id="messages"></div>
 
@@ -232,6 +260,9 @@ document.getElementById("imageInput")
 const typingBar =
 document.getElementById("typingBar")
 
+const onlineStatus =
+document.getElementById("onlineStatus")
+
 let typingTimeout = null
 
 function addMessage(message,isMine=false){
@@ -263,6 +294,12 @@ div.innerHTML = `
 ${message.text || ""}
 
 ${imageHTML}
+
+<div class="meta">
+
+${message.seen ? "Seen ✓✓" : "Delivered ✓"}
+
+</div>
 `
 
 messagesDiv.appendChild(div)
@@ -293,12 +330,32 @@ messagesDiv.innerHTML = ""
 
 data.forEach(msg => {
 
+if(
+msg.username !== username
+&& !msg.seen
+){
+
+markSeen(msg.id)
+
+}
+
 addMessage(
 msg,
 msg.username === username
 )
 
 })
+
+}
+
+async function markSeen(messageId){
+
+await client
+.from("messages")
+.update({
+seen:true
+})
+.eq("id",messageId)
 
 }
 
@@ -316,7 +373,8 @@ await client
 {
 job_id:jobId,
 username:username,
-text:text
+text:text,
+seen:false
 }
 ])
 
@@ -364,24 +422,16 @@ client.storage
 const imageUrl =
 data.publicUrl
 
-const { error } =
 await client
 .from("messages")
 .insert([
 {
 job_id:jobId,
 username:username,
-image_url:imageUrl
+image_url:imageUrl,
+seen:false
 }
 ])
-
-if(error){
-
-console.error(error)
-
-alert(error.message)
-
-}
 
 }
 
@@ -393,6 +443,19 @@ event:"typing",
 payload:{
 username,
 isTyping
+}
+})
+
+}
+
+function sendPresence(isOnline){
+
+client.channel("presence-" + jobId).send({
+type:"broadcast",
+event:"presence",
+payload:{
+username,
+isOnline
 }
 })
 
@@ -456,6 +519,15 @@ uploadImage(file)
 }
 )
 
+window.addEventListener(
+"beforeunload",
+()=>{
+
+sendPresence(false)
+
+}
+)
+
 client
 .channel("job-chat-" + jobId)
 .on(
@@ -472,6 +544,14 @@ String(payload.new.job_id)
 !== String(jobId)
 ) return
 
+if(
+payload.new.username !== username
+){
+
+markSeen(payload.new.id)
+
+}
+
 addMessage(
 payload.new,
 payload.new.username === username
@@ -479,7 +559,15 @@ payload.new.username === username
 
 }
 )
-.subscribe()
+.subscribe((status)=>{
+
+if(status==="SUBSCRIBED"){
+
+sendPresence(true)
+
+}
+
+})
 
 client
 .channel("typing-" + jobId)
@@ -503,6 +591,37 @@ payload.payload.username +
 }else{
 
 typingBar.innerText = ""
+
+}
+
+}
+)
+.subscribe()
+
+client
+.channel("presence-" + jobId)
+.on(
+"broadcast",
+{
+event:"presence"
+},
+(payload)=>{
+
+if(
+payload.payload.username === username
+) return
+
+if(payload.payload.isOnline){
+
+onlineStatus.innerText =
+payload.payload.username +
+" is online"
+
+}else{
+
+onlineStatus.innerText =
+payload.payload.username +
+" went offline"
 
 }
 
