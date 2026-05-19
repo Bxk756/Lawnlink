@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Contractor Onboarding</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:system-ui;
+background:#f4f4f4;
+padding:40px;
+}
+
+.container{
+max-width:700px;
+margin:auto;
+background:white;
+padding:40px;
+border-radius:20px;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+h1{
+font-size:38px;
+margin-bottom:10px;
+color:#222;
+}
+
+p{
+color:#666;
+margin-bottom:30px;
+}
+
+input{
+width:100%;
+padding:18px;
+border-radius:14px;
+border:1px solid #ccc;
+font-size:16px;
+margin-bottom:20px;
+}
+
+button{
+width:100%;
+padding:18px;
+border:none;
+border-radius:14px;
+background:#39d353;
+color:white;
+font-size:18px;
+font-weight:700;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.status{
+margin-top:20px;
+font-size:16px;
+font-weight:600;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>
+💸 Contractor Payout Setup
+</h1>
+
+<p>
+Connect your Stripe account to receive LawnLink payouts instantly.
+</p>
+
+<input
+id="email"
+type="email"
+placeholder="Contractor Email"
+/>
+
+<button id="connectBtn">
+Connect Stripe Account
+</button>
+
+<div class="status" id="status"></div>
+
+</div>
+
+<script>
+
+const btn =
+document.getElementById("connectBtn")
+
+const statusDiv =
+document.getElementById("status")
+
+btn.addEventListener(
+"click",
+async ()=>{
+
+const email =
+document.getElementById("email").value
+
+if(!email){
+
+alert("Enter email")
+
+return
+
+}
+
+statusDiv.innerText =
+"Creating Stripe account..."
+
+const createAccount =
+await fetch(
+"/api/create-connected-account",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+email
+})
+}
+)
+
+const accountData =
+await createAccount.json()
+
+if(accountData.error){
+
+alert(accountData.error)
+
+return
+
+}
+
+statusDiv.innerText =
+"Generating onboarding link..."
+
+const onboarding =
+await fetch(
+"/api/create-onboarding-link",
+{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+accountId: accountData.accountId
+})
+}
+)
+
+const onboardingData =
+await onboarding.json()
+
+if(onboardingData.error){
+
+alert(onboardingData.error)
+
+return
+
+}
+
+window.location.href =
+onboardingData.url
+
+}
+)
+
+</script>
+
+</body>
+</html>

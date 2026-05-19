@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Payout Dashboard</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:system-ui;
+background:#f4f4f4;
+padding:40px;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+}
+
+.header{
+background:#39d353;
+padding:30px;
+border-radius:20px;
+color:white;
+margin-bottom:30px;
+}
+
+.header h1{
+font-size:38px;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:20px;
+box-shadow:0 8px 20px rgba(0,0,0,.08);
+margin-bottom:20px;
+}
+
+.row{
+display:flex;
+justify-content:space-between;
+padding:14px 0;
+border-bottom:1px solid #eee;
+}
+
+.label{
+color:#666;
+font-weight:600;
+}
+
+.value{
+font-weight:700;
+}
+
+button{
+margin-top:20px;
+padding:16px 22px;
+border:none;
+border-radius:14px;
+background:#39d353;
+color:white;
+font-size:16px;
+font-weight:700;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.9;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+
+<h1>
+💰 LawnLink Payout Dashboard
+</h1>
+
+<p>
+Contractor earnings and transfers
+</p>
+
+</div>
+
+<div class="card">
+
+<div class="row">
+<div class="label">Completed Jobs</div>
+<div class="value">12</div>
+</div>
+
+<div class="row">
+<div class="label">Pending Payouts</div>
+<div class="value">$430.00</div>
+</div>
+
+<div class="row">
+<div class="label">Completed Transfers</div>
+<div class="value">$2,140.00</div>
+</div>
+
+<div class="row">
+<div class="label">Stripe Status</div>
+<div class="value">Connected ✅</div>
+</div>
+
+<button id="instantPayoutBtn">
+Instant Payout
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+document
+.getElementById("instantPayoutBtn")
+.addEventListener(
+"click",
+()=>{
+
+alert(
+"Instant payout system connected successfully."
+)
+
+}
+)
+
+</script>
+
+</body>
+</html>
