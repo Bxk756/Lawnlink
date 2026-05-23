@@ -1,9 +1,10 @@
 {
-  "name": "LawnLink",
+  "name": "LawnLink by Swarm Shield LLC",
   "short_name": "LawnLink",
+  "description": "AI-powered landscaping marketplace platform",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7f7f7",
+  "background_color": "#ffffff",
   "theme_color": "#16a34a",
   "orientation": "portrait",
   "icons": [
